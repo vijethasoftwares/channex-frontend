@@ -17,7 +17,7 @@ export default function ErrorPage() {
         Oops! Something went wrong.
       </Heading>
       <Heading variant="caption">
-        Error: {error?.message || "Unknown error"}
+        Error: {(error as Error)?.message || "Unknown error"}
       </Heading>
       <div className="flex justify-center items-center gap-2.5">
         <Button
