@@ -8,17 +8,13 @@ import { Button } from "./ui/button";
 import { TableCell } from "./ui/table";
 
 interface TableActionItemProps {
-  data: DataProps;
+  data: unknown;
   fetchFucntion: () => void;
   apiUrl: string;
   editUrl?: string;
   viewUrl?: string;
   isViewVisible?: boolean;
   isEditVisible?: boolean;
-}
-
-interface DataProps {
-  id: number;
 }
 
 export const TableActionItem: FC<TableActionItemProps> = ({
@@ -38,7 +34,8 @@ export const TableActionItem: FC<TableActionItemProps> = ({
   const deleteTableItem = async () => {
     setIsDeleting(true);
     return await axios
-      .delete(`${SERVER_URL}${apiUrl}${data.id}/`, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .delete(`${SERVER_URL}${apiUrl}${(data as any).id}/`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `token ${user.token}`,
@@ -68,7 +65,7 @@ export const TableActionItem: FC<TableActionItemProps> = ({
     navigate({
       pathname: viewUrl,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      search: createSearchParams(data).toString(),
+      search: createSearchParams(data as any).toString(),
     });
   };
 
