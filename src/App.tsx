@@ -1,14 +1,20 @@
 import { FC, Fragment, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "./components/navbar";
 import SideBar from "./components/sidebar";
+import { useGlobalContext } from "./lib/utils";
 
 const App: FC = () => {
+  const { user, loading } = useGlobalContext();
+  const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
-    if (document) {
+    if (user === null && !loading) {
       // document.documentElement.classList.add("dark");
+      navigate("/login");
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location]);
   return (
     <Fragment>
       <Navbar />

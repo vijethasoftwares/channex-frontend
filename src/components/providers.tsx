@@ -9,6 +9,8 @@ type Props = {
 export type GlobalContextType = {
   user: UserProps;
   setUser: React.Dispatch<React.SetStateAction<UserProps>>;
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export const GlobalContext = createContext<GlobalContextType>(
@@ -30,13 +32,20 @@ const Providers: FC<Props> = (props) => {
       setUser(parsedUser);
       setLoading(false);
     } else {
-      window.location.href = "/login";
       setLoading(false);
     }
   }, []);
 
+  useEffect(() => {
+    if (!loading && (user === null || user === undefined)) {
+      window.location.href = "/login";
+      console.log("Redirecting to login");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <GlobalContext.Provider value={{ user, setUser }}>
+    <GlobalContext.Provider value={{ user, setUser, loading, setLoading }}>
       {props.children}
       {loading && (
         <div className="fixed bg-white inset-0 w-full h-full flex justify-center items-center z-[999]">
