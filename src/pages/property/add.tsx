@@ -5,7 +5,7 @@ import MemoizedMapComponent from "@/components/map-component";
 import { PropertyProps } from "@/components/types/app";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn, convertImagesToBase64 } from "@/lib/utils";
+import { SERVER_URL, cn, convertImagesToBase64 } from "@/lib/utils";
 import {
   Checkbox,
   Input,
@@ -289,7 +289,7 @@ const AddProperty: FC<Props> = () => {
     setFetchingNearbyPlaces(true);
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/map/nearby-places?lat=${coordinate.lat}&lng=${coordinate.lng}`
+        `${SERVER_URL}/map/nearby-places?lat=${coordinate.lat}&lng=${coordinate.lng}`
       );
 
       const data = await response.data;
