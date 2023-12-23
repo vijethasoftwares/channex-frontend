@@ -11,36 +11,35 @@ export const SERVER_URL = import.meta.env.VITE_API;
 
 export const useGlobalContext = () => useContext(GlobalContext);
 
-// Additional utility functions
-
-export function deepClone(obj: any) {
+export function deepClone(obj: unknown) {
   return JSON.parse(JSON.stringify(obj));
 }
 
-export function isEqual(obj1: any, obj2: any) {
+export function isEqual(obj1: unknown, obj2: unknown) {
   return JSON.stringify(obj1) === JSON.stringify(obj2);
 }
 
-export function debounce(func: Function, delay: number) {
-  let debounceTimer: NodeJS.Timeout;
-  return function (...args: any[]) {
-    const context = this;
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => func.apply(context, args), delay);
-  };
-}
+// export function debounce(func: Function, delay: number) {
+//   let debounceTimer: NodeJS.Timeout;
+//   return  (...args: any[]) => {
+//     // eslint-disable-next-line @typescript-eslint/no-this-alias
+//     const context = this as any;
+//     clearTimeout(debounceTimer);
+//     debounceTimer = setTimeout(() => func.apply(context, args), delay);
+//   };
+// }
 
-export function throttle(func: Function, limit: number) {
-  let inThrottle: boolean;
-  return function (...args: any[]) {
-    const context = this;
-    if (!inThrottle) {
-      func.apply(context, args);
-      inThrottle = true;
-      setTimeout(() => (inThrottle = false), limit);
-    }
-  };
-}
+// export function throttle(func: Function, limit: number) {
+//   let inThrottle: boolean;
+//   return function (...args: any[]) {
+//     const context = this;
+//     if (!inThrottle) {
+//       func.apply(context, args);
+//       inThrottle = true;
+//       setTimeout(() => (inThrottle = false), limit);
+//     }
+//   };
+// }
 
 export function uuid() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
@@ -50,7 +49,9 @@ export function uuid() {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function flattenObject(ob: Record<string, any>): Record<string, any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return Object.entries(ob).reduce((acc: Record<string, any>, [key, value]) => {
     if (typeof value === "object" && value !== null && !Array.isArray(value)) {
       const flatObject = flattenObject(value);

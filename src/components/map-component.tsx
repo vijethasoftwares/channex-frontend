@@ -35,7 +35,7 @@ const MapComponent: FC<MapProps> = ({
   }, []);
 
   useEffect(() => {
-    if (map && coordinates?.length > 0) {
+    if (map && (coordinates?.length ?? 0) > 0) {
       const bounds = new google.maps.LatLngBounds();
       coordinates?.forEach((coord) => {
         bounds.extend(new google.maps.LatLng(coord.lat, coord.lng));
@@ -69,13 +69,27 @@ const MapComponent: FC<MapProps> = ({
       <div className="flex flex-col items-center absolute right-4 bottom-4 gap-1.5">
         <button
           className="flex justify-center items-center bg-white w-10 h-10 rounded-[40px] border text-xl text-black shadow-md hover:bg-zinc-50 active:scale-95 duration-100"
-          onClick={() => map?.setZoom(map.getZoom() + 1)}
+          onClick={() => {
+            if (map?.getZoom() === 20) return;
+            if (map) {
+              if (map) {
+                map.setZoom((map.getZoom() ?? 0) + 1);
+              }
+            }
+          }}
         >
           +
         </button>
         <button
           className="flex justify-center items-center bg-white w-10 h-10 rounded-[40px] text-xl border text-black shadow-md hover:bg-zinc-50 active:scale-95 duration-100"
-          onClick={() => map?.setZoom(map.getZoom() - 1)}
+          onClick={() => {
+            if (map?.getZoom() === 1) return;
+            if (map) {
+              if (map) {
+                map.setZoom((map.getZoom() ?? 0) - 1);
+              }
+            }
+          }}
         >
           -
         </button>

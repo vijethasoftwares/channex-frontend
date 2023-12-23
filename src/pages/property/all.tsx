@@ -30,7 +30,7 @@ const AllProperties: FC<Props> = () => {
       setProperties(properties);
       console.log(data);
     } catch (error) {
-      toast.error(error.message || "An error occurred");
+      toast.error((error as Error)?.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ const AllProperties: FC<Props> = () => {
             + Add Property
           </Button>
         </ContainerBetween>
-        <Container className="space-y-5">
+        <Container className="space-y-5 p-0">
           <Heading variant="subheading">All Properties</Heading>
           {loading && <Loader />}
           {properties.length > 0 &&

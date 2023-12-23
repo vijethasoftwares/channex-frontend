@@ -14,7 +14,7 @@ interface Props {
     | "overline";
 }
 
-const variantStyles: Record<Props["variant"], string> = {
+const variantStyles: Record<string, string> = {
   heading: "text-3xl font-semibold font-sora text-purple-600",
   subheading: "text-2xl font-semibold font-sora text-zinc-700",
   title: "text-xl font-semibold text-black",

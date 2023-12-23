@@ -726,14 +726,15 @@ const Meal: FC<MealProps> = ({
   foodMenu,
   setFoodMenu,
 }) => {
-  const [mealName, setMealName] = useState("");
-  const [mealType, setMealType] = useState("");
-  const [mealItems, setMealItems] = useState("");
-  const [mealItemsArray, setMealItemsArray] = useState([""]);
+  const [mealName, setMealName] = useState<string>("");
+  const [mealType, setMealType] = useState<string>("");
+  const [mealItems, setMealItems] = useState<string>("");
+  const [mealItemsArray, setMealItemsArray] = useState<string[]>([]);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleAddMeal = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     const _mealData = {
       name: mealName,
       type: mealType,

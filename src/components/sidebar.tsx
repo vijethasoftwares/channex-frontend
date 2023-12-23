@@ -1,38 +1,18 @@
-import { useGlobalContext } from "@/lib/utils";
-import { type UserType } from "@/types";
 import { motion } from "framer-motion";
 import {
-  Car,
-  CarTaxiFront,
-  CircleDollarSign,
   Flag,
   LandPlot,
   LayoutGrid,
-  LayoutPanelLeft,
-  Mail,
-  MapPin,
   MapPinned,
-  Power,
   Star,
-  Tags,
-  User,
   WalletCards,
 } from "lucide-react";
 import { FC } from "react";
-import { Link, NavLink } from "react-router-dom";
 import CollapsableDropdown, {
   CollapsableDropdownItem,
 } from "./collapsable-dropdown";
-// import { GlobalContextType } from "./providers";
-import SidebarLink from "./sidebar-link";
 
 interface Props {}
-
-const user = {
-  name: "John Doe",
-  email: "johndoe@gmail.com",
-  phone: "123455678",
-};
 
 const DashboardLinks = [
   {
@@ -111,12 +91,7 @@ const ReviewLinks = [
   },
 ];
 
-const SideBar: FC<Props> = (props) => {
-  // const { user } = useGlobalContext() as GlobalContextType;
-
-  const userInitials = user?.name ? user?.name.split(" ").map((n) => n[0]) : "";
-
-  const handleSignOut = () => {};
+const SideBar: FC<Props> = () => {
   return (
     <motion.div
       layout="size"

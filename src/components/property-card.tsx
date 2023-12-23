@@ -15,7 +15,10 @@ const PropertyCard: FC<Props> = ({ data }) => {
       <div className="w-2/6 flex flex-col">
         <div className="w-full bg-zinc-50 rounded-md flex">
           <Avatar className="w-full h-48 rounded-xl">
-            <AvatarImage src={data.images[0]} className="object-cover" />
+            <AvatarImage
+              src={data.images ? data.images[0] : ""}
+              className="object-cover"
+            />
             <AvatarFallback className="rounded-xl border">
               <div className="w-full h-full flex items-center justify-center">
                 "No Image"
@@ -24,7 +27,8 @@ const PropertyCard: FC<Props> = ({ data }) => {
           </Avatar>
         </div>
         <div className="grid grid-cols-4 gap-2 mt-2">
-          {Array.from({ length: 4 }).map((_, i) => {
+          {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
+          {Array.from({ length: 4 }).map((_) => {
             return (
               <Avatar className="w-full h-24 rounded-xl">
                 <AvatarImage src={""} className="w-full h-full object-cover" />
@@ -54,8 +58,8 @@ const PropertyCard: FC<Props> = ({ data }) => {
       </div>
       <div className="p-3 pl-5 border-l flex items-end justify-end">
         <div className="flex flex-col justify-end items-end gap-2.5">
-          <Heading variant="caption">{data.contactInfo.email}</Heading>
-          <Heading variant="caption">{data.contactInfo.phone}</Heading>
+          <Heading variant="caption">{data?.contactInfo?.email}</Heading>
+          <Heading variant="caption">{data?.contactInfo?.phone}</Heading>
         </div>
       </div>
     </div>

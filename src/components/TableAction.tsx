@@ -18,10 +18,7 @@ interface TableActionItemProps {
 }
 
 interface DataProps {
-  id?: number;
-  [key: string]: unknown;
-  [key: number]: unknown;
-  [key: symbol]: unknown;
+  id: number;
 }
 
 export const TableActionItem: FC<TableActionItemProps> = ({
@@ -57,16 +54,20 @@ export const TableActionItem: FC<TableActionItemProps> = ({
 
   const handleNavigate = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
-    navigate({
-      pathname: editUrl,
-      search: createSearchParams(data).toString(),
-    });
+    if (data) {
+      navigate({
+        pathname: editUrl,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        search: createSearchParams(data as any).toString(),
+      });
+    }
   };
 
   const handleView = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
     navigate({
       pathname: viewUrl,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       search: createSearchParams(data).toString(),
     });
   };

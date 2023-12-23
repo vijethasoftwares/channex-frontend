@@ -4,7 +4,7 @@ type Props = {
   children: React.ReactNode;
 };
 
-const Layout: FC<Props> = (props) => {
+const Layout: FC<Props> = () => {
   return <div>Layout</div>;
 };
 
