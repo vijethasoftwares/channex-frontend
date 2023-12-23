@@ -49,7 +49,7 @@ module.exports = {
       layout: {
         radius: {
           small: "0.35rem",
-          medium: "0.4rem",
+          medium: "0.45rem",
           large: "0.75rem",
         },
         fontSize: {

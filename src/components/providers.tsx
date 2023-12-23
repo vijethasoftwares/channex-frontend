@@ -1,3 +1,4 @@
+import { Loader2 } from "lucide-react";
 import React, { FC, createContext, useEffect, useState } from "react";
 import { UserProps } from "./types/app";
 
@@ -16,6 +17,7 @@ export const GlobalContext = createContext<GlobalContextType>(
 
 const Providers: FC<Props> = (props) => {
   const [user, setUser] = useState<UserProps>(null as unknown as UserProps);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const _u = localStorage.getItem("_rfou") as string;
@@ -26,12 +28,21 @@ const Providers: FC<Props> = (props) => {
       Object.keys(parsedUser).length !== 0
     ) {
       setUser(parsedUser);
+      setLoading(false);
+    } else {
+      window.location.href = "/login";
+      setLoading(false);
     }
   }, []);
 
   return (
     <GlobalContext.Provider value={{ user, setUser }}>
       {props.children}
+      {loading && (
+        <div className="fixed bg-white inset-0 w-full h-full flex justify-center items-center z-[999]">
+          <Loader2 className="animate-spin h-12 w-12 text-purple-500" />
+        </div>
+      )}
     </GlobalContext.Provider>
   );
 };

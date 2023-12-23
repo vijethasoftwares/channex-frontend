@@ -1,7 +1,3 @@
-// import { useGlobalContext } from "@/lib/utils";
-import { FC, useEffect } from "react";
-import { Link } from "react-router-dom";
-// import { GlobalContextType } from "./providers";
 import { SERVER_URL, useGlobalContext } from "@/lib/utils";
 import {
   Dropdown,
@@ -15,7 +11,10 @@ import {
 } from "@nextui-org/react";
 import axios from "axios";
 import { PanelRightClose } from "lucide-react";
+import { FC, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { GlobalContextType } from "./providers";
+import { UserProps } from "./types/app";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 
@@ -49,7 +48,10 @@ const NavbarComp: FC<Props> = () => {
 
   const userInitials = user?.role ? user?.role.split(" ").map((n) => n[0]) : "";
 
-  const handleSignOut = () => {};
+  const handleSignOut = () => {
+    setUser(null as unknown as UserProps);
+    localStorage.removeItem("_rfou");
+  };
 
   return (
     <Navbar maxWidth="2xl" height={"auto"} position="static" className="py-4">
@@ -87,13 +89,6 @@ const NavbarComp: FC<Props> = () => {
                 <p className="font-semibold">{user?.email}</p>
               </DropdownItem>
               <DropdownItem key="settings">My Settings</DropdownItem>
-              <DropdownItem key="team_settings">Team Settings</DropdownItem>
-              <DropdownItem key="analytics">Analytics</DropdownItem>
-              <DropdownItem key="system">System</DropdownItem>
-              <DropdownItem key="configurations">Configurations</DropdownItem>
-              <DropdownItem key="help_and_feedback">
-                Help & Feedback
-              </DropdownItem>
               <DropdownItem onClick={handleSignOut} key="logout" color="danger">
                 Log Out
               </DropdownItem>

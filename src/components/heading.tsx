@@ -4,19 +4,37 @@ import { FC } from "react";
 interface Props {
   children: React.ReactNode;
   className?: string;
+  variant?:
+    | "heading"
+    | "subheading"
+    | "title"
+    | "subtitle"
+    | "body"
+    | "caption"
+    | "overline";
 }
 
-const Heading: FC<Props> = ({ children, className, ...props }) => {
+const variantStyles: Record<Props["variant"], string> = {
+  heading: "text-3xl font-semibold font-sora text-purple-600",
+  subheading: "text-2xl font-semibold font-sora text-zinc-700",
+  title: "text-xl font-semibold text-black",
+  subtitle: "text-lg font-semibold text-black",
+  body: "text-base font-normal text-black",
+  caption: "text-sm font-normal text-zinc-500",
+  overline: "text-xs font-normal text-zinc-400",
+};
+
+const Heading: FC<Props> = ({ children, className, variant = "heading" }) => {
+  const Component =
+    variant === "body" || variant === "caption" || variant === "overline"
+      ? "p"
+      : "h1";
+
   return (
-    <h1
-      className={cn(
-        "text-3xl font-semibold font-sora text-purple-600",
-        className
-      )}
-      {...props}
-    >
+    <Component className={cn(variantStyles[variant || "heading"], className)}>
       {children}
-    </h1>
+    </Component>
   );
 };
+
 export default Heading;
