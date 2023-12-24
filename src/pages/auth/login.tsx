@@ -88,6 +88,7 @@ const Login: FC<Props> = () => {
         success: "OTP sent successfully",
         error: "Error while sending OTP",
       });
+      setIsLoading(false);
     } else {
       if (formData.otp.length !== 6) {
         toast.error("Please enter a valid OTP");
@@ -99,6 +100,7 @@ const Login: FC<Props> = () => {
         success: "OTP verified successfully",
         error: "Error while verifying OTP",
       });
+      setIsLoading(false);
     }
   };
 
