@@ -1,4 +1,5 @@
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { Loader2 } from "lucide-react";
 import { FC, useCallback, useEffect, useState } from "react";
 
 interface Coordinates {
@@ -108,7 +109,9 @@ const MapComponent: FC<MapProps> = ({
       )}
     </GoogleMap>
   ) : (
-    <div>Loading...</div>
+    <div className="px-5 py-10 flex justify-center items-center w-full h-full">
+      <Loader2 className="w-6 h-6 animate-spin" />
+    </div>
   );
 };
 

@@ -1,11 +1,25 @@
 import Container from "@/components/container";
+import ContainerBetween from "@/components/container-between";
 import ContainerColumn from "@/components/container-column";
 import Heading from "@/components/heading";
 import MemoizedMapComponent from "@/components/map-component";
-import { PropertyProps } from "@/components/types/app";
+import { GlobalContextType } from "@/components/providers";
+// import { PropertyProps } from "@/components/types/app";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { SERVER_URL, cn, convertImagesToBase64 } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  SERVER_URL,
+  convertImagesToBase64,
+  useGlobalContext,
+} from "@/lib/utils";
 import {
   Checkbox,
   Input,
@@ -34,16 +48,35 @@ type Permission = {
   value: string;
 };
 
+interface PropertyProps {
+  name: string;
+  location: string;
+  address: string;
+  coOfLocation: { type: "Point"; coordinates: [number, number] };
+  nearbyPlaces?: string[];
+  images: string[];
+  manager?: {
+    name: string;
+    email: string;
+    phoneNumber: string;
+  };
+  permissions?: string[];
+  facilities?: string[];
+  isParkingSpaceAvailable?: boolean | "true" | "false" | string;
+  isCoupleFriendly?: boolean;
+  foodMenu?: FoodMenuProps[];
+}
+
 interface FoodMenuProps {
   day: string;
-  bgColor: string;
   meals: MealData[];
 }
 
 interface MealData {
   name: string;
-  type: string;
-  items: string[];
+  hasMealItems?: boolean;
+  vegMealItems: string[];
+  nonVegMealItems: string[];
 }
 
 interface PlacesData {
@@ -72,159 +105,22 @@ const facilitiesEnum = [
   "Dining hall",
   "Food on order (payable)",
 ];
-const FoodMenuData = [
-  {
-    day: "Monday",
-    bgColor: "bg-yellow-100",
-    meals: [
-      {
-        name: "Breakfast",
-        type: "Veg",
-        items: ["Cereal", "Milk", "Banana"],
-      },
-      {
-        name: "Lunch",
-        type: "Veg",
-        items: ["Rice", "Lentils", "Salad"],
-      },
-      {
-        name: "Dinner",
-        type: "Veg",
-        items: ["Pasta", "Tomato Sauce", "Cheese"],
-      },
-    ],
-  },
-  {
-    day: "Tuesday",
-    bgColor: "bg-green-100",
-    meals: [
-      {
-        name: "Breakfast",
-        type: "Veg",
-        items: ["Cereal", "Milk", "Banana"],
-      },
-      {
-        name: "Lunch",
-        type: "Veg",
-        items: ["Rice", "Lentils", "Salad"],
-      },
-      {
-        name: "Dinner",
-        type: "Veg",
-        items: ["Pasta", "Tomato Sauce", "Cheese"],
-      },
-    ],
-  },
-  {
-    day: "Wednesday",
-    bgColor: "bg-red-100",
-    meals: [
-      {
-        name: "Breakfast",
-        type: "Veg",
-        items: ["Cereal", "Milk", "Banana"],
-      },
-      {
-        name: "Lunch",
-        type: "Veg",
-        items: ["Rice", "Lentils", "Salad"],
-      },
-      {
-        name: "Dinner",
-        type: "Veg",
-        items: ["Pasta", "Tomato Sauce", "Cheese"],
-      },
-    ],
-  },
-  {
-    day: "Thursday",
-    bgColor: "bg-blue-100",
-    meals: [
-      {
-        name: "Breakfast",
-        type: "Veg",
-        items: ["Cereal", "Milk", "Banana"],
-      },
-      {
-        name: "Lunch",
-        type: "Veg",
-        items: ["Rice", "Lentils", "Salad"],
-      },
-      {
-        name: "Dinner",
-        type: "Veg",
-        items: ["Pasta", "Tomato Sauce", "Cheese"],
-      },
-    ],
-  },
-  {
-    day: "Friday",
-    bgColor: "bg-yellow-100",
-    meals: [
-      {
-        name: "Breakfast",
-        type: "Veg",
-        items: ["Cereal", "Milk", "Banana"],
-      },
-      {
-        name: "Lunch",
-        type: "Veg",
-        items: ["Rice", "Lentils", "Salad"],
-      },
-      {
-        name: "Dinner",
-        type: "Veg",
-        items: ["Pasta", "Tomato Sauce", "Cheese"],
-      },
-    ],
-  },
-  {
-    day: "Saturday",
-    bgColor: "bg-green-100",
-    meals: [
-      {
-        name: "Breakfast",
-        type: "Veg",
-        items: ["Cereal", "Milk", "Banana"],
-      },
-      {
-        name: "Lunch",
-        type: "Veg",
-        items: ["Rice", "Lentils", "Salad"],
-      },
-      {
-        name: "Dinner",
-        type: "Veg",
-        items: ["Pasta", "Tomato Sauce", "Cheese"],
-      },
-    ],
-  },
-  {
-    day: "Sunday",
-    bgColor: "bg-red-100",
-    meals: [
-      {
-        name: "Breakfast",
-        type: "Veg",
-        items: ["Cereal", "Milk", "Banana"],
-      },
-      {
-        name: "Lunch",
-        type: "Veg",
-        items: ["Rice", "Lentils", "Salad"],
-      },
-      {
-        name: "Dinner",
-        type: "Veg",
-        items: ["Pasta", "Tomato Sauce", "Cheese"],
-      },
-    ],
-  },
+
+const DaysEnum = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
 ];
+const MealNameEnum = ["Breakfast", "Lunch", "Snack", "Dinner"];
 
 const GOOGLE_API_KEY = import.meta.env.VITE_MAP_API_KEY as string;
 
 const AddProperty: FC<Props> = () => {
+  const { user } = useGlobalContext() as GlobalContextType;
   const [location, setLocation] = useState<string>("");
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
   const [coordinate, setCoordinate] = useState({
@@ -242,12 +138,64 @@ const AddProperty: FC<Props> = () => {
   const [isParkingSpaceAvailable, setIsParkingSpaceAvailable] =
     useState<Selection>(new Set(["false"]));
   const [facilities, setFacilities] = useState<Selection>(new Set([]));
+
+  /*
+   ** Manager States
+   */
   const [managerName, setManagerName] = useState<string>("");
   const [managerEmail, setManagerEmail] = useState<string>("");
   const [managerPhoneNumber, setManagerPhoneNumber] = useState<string>("");
-  const [foodMenu, setFoodMenu] = useState<FoodMenuProps[]>(FoodMenuData);
 
+  /*
+   ** Food Menu States
+   */
+  const [foodMenu, setFoodMenu] = useState<FoodMenuProps[]>(
+    DaysEnum.map((day) => {
+      return {
+        day: day,
+        meals: [
+          {
+            name: MealNameEnum[0],
+            hasMealItems: false,
+            vegMealItems: [],
+            nonVegMealItems: [],
+          },
+          {
+            name: MealNameEnum[1],
+            hasMealItems: false,
+            vegMealItems: [],
+            nonVegMealItems: [],
+          },
+          {
+            name: MealNameEnum[2],
+            hasMealItems: false,
+            vegMealItems: [],
+            nonVegMealItems: [],
+          },
+          {
+            name: MealNameEnum[3],
+            hasMealItems: false,
+            vegMealItems: [],
+            nonVegMealItems: [],
+          },
+        ],
+      };
+    })
+  );
+  const [mealName, setMealName] = useState<Selection>(new Set([]));
+  const [day, setDay] = useState<Selection>(new Set([]));
+  const [vegMealItems, setVegMealItems] = useState<string>("");
+  const [vegMealItemsArray, setVegMealItemsArray] = useState<string[]>([]);
+  const [nonVegMealItems, setNonVegMealItems] = useState<string>("");
+  const [nonVegMealItemsArray, setNonVegMealItemsArray] = useState<string[]>(
+    []
+  );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const {
+    isOpen: isOpenFoodMenu,
+    onOpen: onOpenFoodMenu,
+    onOpenChange: onOpenChangeFoodMenu,
+  } = useDisclosure();
 
   const handleLocationInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLocation(event.target.value);
@@ -326,6 +274,10 @@ const AddProperty: FC<Props> = () => {
 
   const handleSubmit = async () => {
     const img = await convertImagesToBase64(images);
+    const np = Array.from(nearbyPlaces) as string[];
+    const p = Array.from(permissions) as string[];
+    const f = Array.from(facilities) as string[];
+    const ipsa = Array.from(isParkingSpaceAvailable) as string[];
     const property: PropertyProps = {
       name: name,
       location: location,
@@ -334,11 +286,36 @@ const AddProperty: FC<Props> = () => {
         type: "Point",
         coordinates: [coordinate.lat, coordinate.lng],
       },
-      description: "",
       images: img,
-      size: 0,
+      nearbyPlaces: np,
+      permissions: p,
+      facilities: f,
+      isParkingSpaceAvailable: ipsa[0],
+      isCoupleFriendly: coupleFriendly,
+      foodMenu: foodMenu,
+      manager: {
+        name: managerName,
+        email: managerEmail,
+        phoneNumber: managerPhoneNumber,
+      },
     };
     console.log(property);
+    try {
+      const res = await axios.post(
+        SERVER_URL + "/owner/create-properties",
+        property,
+        {
+          headers: {
+            Authorization: "Bearer " + user.token,
+          },
+        }
+      );
+      const data = await res.data;
+      console.log(data, "data");
+    } catch (error) {
+      console.log(error);
+      toast.error("something went wrong");
+    }
   };
 
   const handleAddManager = async () => {
@@ -347,6 +324,77 @@ const AddProperty: FC<Props> = () => {
       return;
     }
     onOpenChange();
+  };
+
+  const handleAddMeal = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const dayString = Array.from(day).toString();
+    const vmi = Array.from(vegMealItemsArray);
+    const nvmi = Array.from(nonVegMealItemsArray);
+    const mn = Array.from(mealName).toString();
+    if (dayString.length == 0) {
+      toast.error("Day cannot be empty");
+      return;
+    }
+    if (mn.length == 0) {
+      toast.error("Meal name cannot be empty");
+      return;
+    }
+    if (vmi.length == 0 && nvmi.length == 0) {
+      toast.error("Meal items cannot be empty");
+      return;
+    }
+
+    const dayIndex = foodMenu.findIndex((d) => d.day === dayString);
+
+    if (dayIndex !== -1) {
+      // Day already exists in the foodMenu array, update it
+      const foodDay = foodMenu[dayIndex];
+      const mealIndex = foodDay.meals.findIndex((m) => m.name === mn);
+
+      if (mealIndex !== -1) {
+        // Meal already exists in the meals array, update it
+        const updatedMeal = {
+          ...foodDay.meals[mealIndex],
+          vegMealItems: vmi,
+          nonVegMealItems: nvmi,
+          hasMealItems: true,
+        };
+        const updatedMeals = [...foodDay.meals];
+        updatedMeals[mealIndex] = updatedMeal;
+        const updatedFoodDay = { ...foodDay, meals: updatedMeals };
+        const newFoodMenu = [...foodMenu];
+        newFoodMenu[dayIndex] = updatedFoodDay;
+        console.log(newFoodMenu);
+        setFoodMenu(newFoodMenu);
+      } else {
+        // Meal does not exist in the meals array, add it
+        const updatedFoodDay = {
+          ...foodDay,
+          meals: [
+            ...foodDay.meals,
+            {
+              name: mn,
+              hasMealItems: true,
+              vegMealItems: vmi,
+              nonVegMealItems: nvmi,
+            },
+          ],
+        };
+        const newFoodMenu = [...foodMenu];
+        newFoodMenu[dayIndex] = updatedFoodDay;
+        console.log(newFoodMenu);
+        setFoodMenu(newFoodMenu);
+      }
+    }
+
+    setDay(new Set([]));
+    setMealName(new Set([]));
+    setVegMealItems("");
+    setVegMealItemsArray([]);
+    setNonVegMealItems("");
+    setNonVegMealItemsArray([]);
+    onOpenChangeFoodMenu();
   };
 
   return (
@@ -499,31 +547,294 @@ const AddProperty: FC<Props> = () => {
             </div>
           </div>
           <Container className="flex flex-col gap-2.5 w-full p-0 bg-white rounded-md">
-            <Heading variant="subheading">Food Menu</Heading>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {foodMenu.map((day, dayIndex: number) => (
-                <div key={dayIndex} className={cn("p-1 py-2 rounded-lg")}>
-                  <Heading variant="subtitle" className="mb-2 text-black p-1">
-                    {day.day}
-                  </Heading>
-                  <div className="flex flex-col gap-.5">
-                    {day.meals.map((meal, mealIndex: number) => {
-                      return (
-                        <>
-                          <Meal
-                            dayIndex={dayIndex}
-                            mealIndex={mealIndex}
-                            meal={meal}
-                            foodMenu={foodMenu}
-                            setFoodMenu={setFoodMenu}
-                          />
-                        </>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ContainerBetween>
+              <Heading variant="subheading">Food Menu</Heading>
+              <Button
+                onClick={onOpenFoodMenu}
+                size={"sm"}
+                className="active:scale-95"
+              >
+                + Add
+              </Button>
+            </ContainerBetween>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Day</TableHead>
+                  <TableHead>
+                    Breakfast
+                    <span className="block text-xs">
+                      Timing: 7:00 AM - 10:00 AM
+                    </span>
+                  </TableHead>
+                  <TableHead>
+                    Lunch
+                    <span className="block text-xs">
+                      Timing: 12:00 PM - 3:00 PM
+                    </span>
+                  </TableHead>
+                  <TableHead>
+                    Snack
+                    <span className="block text-xs">
+                      Timing: 4:00 PM - 6:00 PM
+                    </span>
+                  </TableHead>
+                  <TableHead>
+                    Dinner
+                    <span className="block text-xs">
+                      Timing: 8:00 PM - 10:00 PM
+                    </span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {foodMenu &&
+                  foodMenu.length > 0 &&
+                  foodMenu.map((day: FoodMenuProps, dayIndex) => {
+                    return (
+                      <TableRow key={dayIndex}>
+                        <TableCell className="border-r">{day?.day}</TableCell>
+                        <TableCell className="border-r p-0">
+                          <div className=" flex flex-col *:flex-1 *:p-4 w-full">
+                            <div className="border-b">
+                              <span className="block">
+                                {day.meals.map(
+                                  (meal, mealIndex) =>
+                                    meal["name"] === MealNameEnum[0] &&
+                                    meal.vegMealItems.length > 0 && (
+                                      <span
+                                        className="font-semibold"
+                                        key={mealIndex}
+                                      >
+                                        Veg
+                                      </span>
+                                    )
+                                )}
+                              </span>
+                              <span className="mt-2 flex gap-1">
+                                {day?.meals.map((meal) => {
+                                  if (
+                                    meal["name"] === MealNameEnum[0] &&
+                                    meal.vegMealItems.length > 0
+                                  ) {
+                                    return meal?.vegMealItems?.map((item) => (
+                                      <Badge>{item}</Badge>
+                                    ));
+                                  }
+                                })}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="block">
+                                {day.meals.map(
+                                  (meal, mealIndex) =>
+                                    meal["name"] === MealNameEnum[0] &&
+                                    meal.nonVegMealItems.length > 0 && (
+                                      <span
+                                        className="font-semibold"
+                                        key={mealIndex}
+                                      >
+                                        Non-Veg
+                                      </span>
+                                    )
+                                )}
+                              </span>
+                              <span className="mt-2 flex gap-1">
+                                {day?.meals.map((meal) => {
+                                  if (
+                                    meal["name"] === MealNameEnum[0] &&
+                                    meal.nonVegMealItems.length > 0
+                                  ) {
+                                    return meal?.nonVegMealItems?.map(
+                                      (item) => <Badge>{item}</Badge>
+                                    );
+                                  }
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="border-r p-0">
+                          <div className=" flex flex-col *:flex-1 *:p-4 w-full">
+                            <div className="border-b">
+                              <span className="block">
+                                {day.meals.map(
+                                  (meal, mealIndex) =>
+                                    meal["name"] === MealNameEnum[1] &&
+                                    meal.vegMealItems.length > 0 && (
+                                      <span
+                                        className="font-semibold"
+                                        key={mealIndex}
+                                      >
+                                        Veg
+                                      </span>
+                                    )
+                                )}
+                              </span>
+                              <span className="mt-2 flex gap-1">
+                                {day?.meals.map((meal) => {
+                                  if (
+                                    meal["name"] === MealNameEnum[1] &&
+                                    meal.vegMealItems.length > 0
+                                  ) {
+                                    return meal?.vegMealItems?.map((item) => (
+                                      <Badge>{item}</Badge>
+                                    ));
+                                  }
+                                })}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="block">
+                                {day.meals.map(
+                                  (meal, mealIndex) =>
+                                    meal["name"] === MealNameEnum[1] &&
+                                    meal.nonVegMealItems.length > 0 && (
+                                      <span
+                                        className="font-semibold"
+                                        key={mealIndex}
+                                      >
+                                        Non-Veg
+                                      </span>
+                                    )
+                                )}
+                              </span>
+                              <span className="mt-2 flex gap-1">
+                                {day?.meals.map((meal) => {
+                                  if (
+                                    meal["name"] === MealNameEnum[1] &&
+                                    meal.nonVegMealItems.length > 0
+                                  ) {
+                                    return meal?.nonVegMealItems?.map(
+                                      (item) => <Badge>{item}</Badge>
+                                    );
+                                  }
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="border-r">
+                          <div className="flex flex-col *:flex-1 w-full">
+                            <span className="block">
+                              {day.meals.map((meal, mealIndex) => {
+                                //check if there is a meal name snack
+                                //and if there are any meal items
+                                //if there are no meal items, then show N/P
+                                if (
+                                  meal["name"] === MealNameEnum[2] &&
+                                  meal.hasMealItems == false
+                                ) {
+                                  return "N/P";
+                                }
+                                if (
+                                  meal["name"] === MealNameEnum[2] &&
+                                  (meal.vegMealItems.length > 0 ||
+                                    meal.nonVegMealItems.length > 0)
+                                ) {
+                                  return (
+                                    <span
+                                      className="font-semibold"
+                                      key={mealIndex}
+                                    >
+                                      snack items
+                                    </span>
+                                  );
+                                }
+                              })}
+                              {day.meals.length < 2 && "N/P"}
+                            </span>
+                            <span className="mt-2 flex gap-1">
+                              {day?.meals.map((meal) => {
+                                if (
+                                  meal["name"] === MealNameEnum[2] &&
+                                  meal.vegMealItems.length > 0
+                                ) {
+                                  return meal?.vegMealItems?.map((item) => (
+                                    <Badge>{item}</Badge>
+                                  ));
+                                }
+                              })}
+                            </span>
+                            <span className="mt-2 flex gap-1">
+                              {day?.meals.map((meal) => {
+                                if (
+                                  meal["name"] === MealNameEnum[2] &&
+                                  meal.nonVegMealItems.length > 0
+                                ) {
+                                  return meal?.nonVegMealItems?.map((item) => (
+                                    <Badge>{item}</Badge>
+                                  ));
+                                }
+                              })}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="p-0">
+                          <div className=" flex flex-col *:flex-1 *:p-4 w-full">
+                            <div className="border-b">
+                              <span className="block">
+                                {day.meals.map(
+                                  (meal, mealIndex) =>
+                                    meal["name"] === MealNameEnum[3] &&
+                                    meal.vegMealItems.length > 0 && (
+                                      <span
+                                        className="font-semibold"
+                                        key={mealIndex}
+                                      >
+                                        Veg
+                                      </span>
+                                    )
+                                )}
+                              </span>
+                              <span className="mt-2 flex gap-1">
+                                {day?.meals.map((meal) => {
+                                  if (
+                                    meal["name"] === MealNameEnum[3] &&
+                                    meal.vegMealItems.length > 0
+                                  ) {
+                                    return meal?.vegMealItems?.map((item) => (
+                                      <Badge>{item}</Badge>
+                                    ));
+                                  }
+                                })}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="block">
+                                {day.meals.map(
+                                  (meal, mealIndex) =>
+                                    meal["name"] === MealNameEnum[3] &&
+                                    meal.nonVegMealItems.length > 0 && (
+                                      <span
+                                        className="font-semibold"
+                                        key={mealIndex}
+                                      >
+                                        Non-Veg
+                                      </span>
+                                    )
+                                )}
+                              </span>
+                              <span className="mt-2 flex gap-1">
+                                {day?.meals.map((meal) => {
+                                  if (
+                                    meal["name"] === MealNameEnum[3] &&
+                                    meal.nonVegMealItems.length > 0
+                                  ) {
+                                    return meal?.nonVegMealItems?.map(
+                                      (item) => <Badge>{item}</Badge>
+                                    );
+                                  }
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+              </TableBody>
+            </Table>
           </Container>
           <div className="w-full grid lg:grid-cols-2 gap-2.5">
             <div className="p-5 bg-zinc-50 border rounded-md w-full flex flex-col justify-start items-start gap-5">
@@ -685,160 +996,123 @@ const AddProperty: FC<Props> = () => {
           )}
         </ModalContent>
       </Modal>
-    </>
-  );
-};
-
-interface MealProps {
-  dayIndex: number;
-  mealIndex: number;
-  meal: {
-    name: string;
-    type: string;
-    items: string[];
-  };
-  foodMenu: {
-    day: string;
-    bgColor: string;
-    meals: MealData[];
-  }[];
-  setFoodMenu: React.Dispatch<
-    React.SetStateAction<
-      {
-        day: string;
-        bgColor: string;
-        meals: MealData[];
-      }[]
-    >
-  >;
-}
-
-interface MealData {
-  name: string;
-  type: string;
-  items: string[];
-}
-
-const Meal: FC<MealProps> = ({
-  dayIndex,
-  mealIndex,
-  meal,
-  foodMenu,
-  setFoodMenu,
-}) => {
-  const [mealName, setMealName] = useState<string>("");
-  const [mealType, setMealType] = useState<string>("");
-  const [mealItems, setMealItems] = useState<string>("");
-  const [mealItemsArray, setMealItemsArray] = useState<string[]>([]);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleAddMeal = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    const _mealData = {
-      name: mealName,
-      type: mealType,
-      items: mealItemsArray,
-    };
-    //add meal to food menu data and update state of food menu dont remove any data and aslo close the modal
-    const newFoodMenu = [...foodMenu];
-    newFoodMenu[dayIndex].meals.splice(mealIndex + 1, 0, _mealData);
-    setFoodMenu(newFoodMenu);
-    setMealName("");
-    setMealType("");
-    setMealItems("");
-    setMealItemsArray([]);
-    onOpenChange();
-  };
-
-  return (
-    <>
-      <div
-        key={mealIndex}
-        className="px-3 py-3 flex flex-col justify-start items-start gap-2 bg-zinc-50 rounded-lg border border-zinc-200"
-      >
-        <div>
-          <Heading variant="body" className="text-md font-medium">
-            {meal.name} - {meal.type}
-          </Heading>
-        </div>
-        <div className="flex flex-wrap justify-start items-center gap-1.5">
-          {meal.items.map((item: string) => (
-            <Badge className="px-3 py-1.5">{item}</Badge>
-          ))}
-        </div>
-      </div>
-      <div className="flex justify-center items-center py-1">
-        <button
-          className="px-3 py-0.5 rounded-3xl hover:bg-zinc-100 active:scale-95"
-          data-day-index={dayIndex}
-          data-meal-index={mealIndex}
-          data-meal={meal}
-          // onClick={handleAddMeal}
-          onClick={onOpen}
-        >
-          +
-        </button>
-      </div>
       <Modal
         isDismissable={false}
         backdrop="blur"
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
+        isOpen={isOpenFoodMenu}
+        onOpenChange={onOpenChangeFoodMenu}
       >
         <ModalContent>
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                Add Manager Details
+                Add Meal Details
               </ModalHeader>
               <ModalBody>
-                <Input
-                  autoFocus
+                <Select
+                  label="Select Day"
+                  labelPlacement="outside"
+                  placeholder="Select an option"
+                  color="default"
+                  radius="md"
+                  size="lg"
+                  variant="bordered"
+                  selectedKeys={day}
+                  onSelectionChange={setDay}
+                >
+                  {DaysEnum &&
+                    DaysEnum.map((Day) => (
+                      <SelectItem key={Day} value={Day}>
+                        {Day}
+                      </SelectItem>
+                    ))}
+                </Select>
+                <Select
                   label="Meal Name"
                   labelPlacement="outside"
-                  placeholder="Enter Meal Name"
-                  variant="bordered"
-                  size="lg"
+                  placeholder="Select an option"
+                  color="default"
                   radius="md"
-                  value={mealName}
-                  onValueChange={setMealName}
-                  isRequired
-                />
-                <Input
-                  autoFocus
-                  label="Meal Type"
-                  labelPlacement="outside"
-                  placeholder="Enter Meal Type"
-                  variant="bordered"
                   size="lg"
-                  radius="md"
-                  value={mealType}
-                  onValueChange={setMealType}
-                  isRequired
-                />
+                  variant="bordered"
+                  selectedKeys={mealName}
+                  onSelectionChange={setMealName}
+                >
+                  {MealNameEnum &&
+                    MealNameEnum.map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                </Select>
                 <Input
                   autoFocus
                   type="text"
-                  label="Meal Items"
+                  label="Veg Meal Items"
                   labelPlacement="outside"
-                  placeholder="Enter Meal Items"
+                  placeholder="Enter Veg Items"
                   variant="bordered"
                   size="lg"
                   radius="md"
-                  value={mealItems}
-                  onValueChange={setMealItems}
+                  value={vegMealItems}
+                  onValueChange={setVegMealItems}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      setMealItemsArray([...mealItemsArray, mealItems]);
-                      setMealItems("");
+                      if (!vegMealItems) {
+                        toast.error("Meal item cannot be empty");
+                        return;
+                      }
+                      setVegMealItemsArray([
+                        ...vegMealItemsArray,
+                        vegMealItems,
+                      ]);
+                      setVegMealItems("");
                     }
                   }}
                 />
 
                 <div className="flex gap-1">
-                  {mealItemsArray.map((item) => {
-                    return <Badge className="px-3 py-1.5 ">{item}</Badge>;
+                  {vegMealItemsArray.map((item) => {
+                    return (
+                      <Badge key={item} className="px-3 py-1.5 ">
+                        {item}
+                      </Badge>
+                    );
+                  })}
+                </div>
+                <Input
+                  autoFocus
+                  type="text"
+                  label="Non-Veg Meal Items"
+                  labelPlacement="outside"
+                  placeholder="Enter Non-Veg Items"
+                  variant="bordered"
+                  size="lg"
+                  radius="md"
+                  value={nonVegMealItems}
+                  onValueChange={setNonVegMealItems}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (!nonVegMealItems) {
+                        toast.error("Meal item cannot be empty");
+                        return;
+                      }
+                      setNonVegMealItemsArray([
+                        ...nonVegMealItemsArray,
+                        nonVegMealItems,
+                      ]);
+                      setNonVegMealItems("");
+                    }
+                  }}
+                />
+
+                <div className="flex gap-1">
+                  {nonVegMealItemsArray.map((item) => {
+                    return (
+                      <Badge key={item} className="px-3 py-1.5 ">
+                        {item}
+                      </Badge>
+                    );
                   })}
                 </div>
               </ModalBody>
@@ -857,5 +1131,4 @@ const Meal: FC<MealProps> = ({
     </>
   );
 };
-
 export default AddProperty;
