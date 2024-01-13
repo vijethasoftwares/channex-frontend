@@ -20,15 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SERVER_URL, groupBy, useGlobalContext } from "@/lib/utils";
-import {
-  Card,
-  CardBody,
-  Select,
-  SelectItem,
-  Spinner,
-  Tab,
-  Tabs,
-} from "@nextui-org/react";
+import { Card, CardBody, Spinner, Tab, Tabs } from "@nextui-org/react";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import dayjs from "dayjs";
 import { ChevronLeft } from "lucide-react";
@@ -40,10 +32,6 @@ import { MealNameEnum } from "./consts";
 type Props = {
   children?: React.ReactNode;
 };
-
-const RoomCategoryEnum = ["A/C", "Non A/C"];
-
-const RoomTypeEnum = ["Single", "Double", "Triple", "Dormitory"];
 
 const PropertyById: FC<Props> = () => {
   const { id } = useParams();
