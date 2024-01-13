@@ -77,3 +77,21 @@ export function convertImagesToBase64(files: File[]): Promise<string[]> {
 
   return Promise.all(promises);
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function groupBy<T, K extends keyof any>(
+  list: T[],
+  keyGetter: (input: T) => K
+): Map<K, T[]> {
+  const map = new Map<K, T[]>();
+  list.forEach((item) => {
+    const key = keyGetter(item);
+    let collection = map.get(key);
+    if (!collection) {
+      collection = [];
+      map.set(key, collection);
+    }
+    collection.push(item);
+  });
+  return map;
+}

@@ -15,9 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import firebase_app from "@/lib/firebase";
 import {
   SERVER_URL,
-  convertImagesToBase64,
+  // convertImagesToBase64,
   useGlobalContext,
 } from "@/lib/utils";
 import {
@@ -33,11 +34,19 @@ import {
   Selection,
   useDisclosure,
 } from "@nextui-org/react";
-import axios from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, X } from "lucide-react";
 import React, { FC, useState } from "react";
 import toast from "react-hot-toast";
+import {
+  DaysEnum,
+  MealNameEnum,
+  Permissions,
+  PropertyTypeEnum,
+  facilitiesEnum,
+} from "./consts";
 
 type Props = {
   children?: React.ReactNode;
@@ -50,11 +59,12 @@ type Permission = {
 
 interface PropertyProps {
   name: string;
+  type: string;
   location: string;
   address: string;
   coOfLocation: { type: "Point"; coordinates: [number, number] };
   nearbyPlaces?: string[];
-  images: string[];
+  images: { label: string; url: string }[];
   manager?: {
     name: string;
     email: string;
@@ -85,44 +95,13 @@ interface PlacesData {
   rating: number;
 }
 
-const Permissions = [
-  { key: "entry", value: "27/7 entry" },
-  { key: "smoking", value: "allow smoking" },
-  { key: "pets", value: "allow pets" },
-  { key: "drinking", value: "allow drinking" },
-  { key: "guests", value: "allow guests" },
-];
-
-const facilitiesEnum = [
-  "Parking space",
-  "Gym",
-  "Common Room with TV",
-  "Indoor Play games",
-  "Laundry",
-  "Common Washing machine",
-  "Washing machine per floor",
-  "Food served to room",
-  "Dining hall",
-  "Food on order (payable)",
-];
-
-const DaysEnum = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-const MealNameEnum = ["Breakfast", "Lunch", "Snack", "Dinner"];
-
 const GOOGLE_API_KEY = import.meta.env.VITE_MAP_API_KEY as string;
+
+const storage = getStorage(firebase_app);
 
 const AddProperty: FC<Props> = () => {
   const { user } = useGlobalContext() as GlobalContextType;
   const [location, setLocation] = useState<string>("");
-  const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
   const [coordinate, setCoordinate] = useState({
     lat: 0,
     lng: 0,
@@ -132,12 +111,19 @@ const AddProperty: FC<Props> = () => {
   const [fetchingNearbyPlaces, setFetchingNearbyPlaces] =
     useState<boolean>(false);
   const [name, setName] = useState<string>("");
+  const [propertyType, setPropertyType] = useState<Selection>(new Set([]));
   const [coupleFriendly, setCoupleFriendly] = useState<boolean>(false);
   const [images, setImages] = useState<File[]>([]);
   const [permissions, setPermissions] = useState<Selection>(new Set([]));
   const [isParkingSpaceAvailable, setIsParkingSpaceAvailable] =
     useState<Selection>(new Set(["false"]));
   const [facilities, setFacilities] = useState<Selection>(new Set([]));
+
+  /*
+   ** loading state
+   */
+  const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   /*
    ** Manager States
@@ -272,21 +258,25 @@ const AddProperty: FC<Props> = () => {
     setImages(newImages);
   };
 
-  const handleSubmit = async () => {
-    const img = await convertImagesToBase64(images);
+  const handleSubmit: () => Promise<void> = async () => {
+    // const img = await convertImagesToBase64(images);
+    setSubmitting(true);
     const np = Array.from(nearbyPlaces) as string[];
     const p = Array.from(permissions) as string[];
     const f = Array.from(facilities) as string[];
     const ipsa = Array.from(isParkingSpaceAvailable) as string[];
+    console.log(coordinate);
+    const imagesLinks = await uploadImagesToFirebase(images);
     const property: PropertyProps = {
       name: name,
+      type: Array.from(propertyType).toString(),
       location: location,
       address: location,
       coOfLocation: {
         type: "Point",
         coordinates: [coordinate.lat, coordinate.lng],
       },
-      images: img,
+      images: imagesLinks,
       nearbyPlaces: np,
       permissions: p,
       facilities: f,
@@ -300,8 +290,9 @@ const AddProperty: FC<Props> = () => {
       },
     };
     console.log(property);
+
     try {
-      const res = await axios.post(
+      const res: AxiosResponse = await axios.post(
         SERVER_URL + "/owner/create-properties",
         property,
         {
@@ -312,9 +303,36 @@ const AddProperty: FC<Props> = () => {
       );
       const data = await res.data;
       console.log(data, "data");
+      toast.success(data.message || "Property added successfully");
     } catch (error) {
-      console.log(error);
-      toast.error("something went wrong");
+      const err = error as AxiosError & { response: AxiosResponse };
+      console.log(err.response);
+      toast.error(err.response.data?.message || "An error occurred");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const uploadImagesToFirebase = async (images: File[]) => {
+    const imageUrls = [];
+
+    try {
+      for (const image of images) {
+        const imageRef = ref(
+          storage,
+          `property_images/${Date.now()}-${image.name}`
+        );
+        await uploadBytes(imageRef, image);
+        const imageUrl = await getDownloadURL(imageRef);
+        imageUrls.push({
+          label: image.name,
+          url: imageUrl,
+        });
+      }
+      return imageUrls;
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      return [];
     }
   };
 
@@ -419,6 +437,24 @@ const AddProperty: FC<Props> = () => {
                 size="lg"
                 variant="bordered"
               />
+              <Select
+                name=""
+                color="default"
+                label="Property Type"
+                labelPlacement="outside"
+                placeholder="Select property type"
+                selectedKeys={propertyType}
+                onSelectionChange={setPropertyType}
+                radius="md"
+                size="lg"
+                variant="bordered"
+              >
+                {PropertyTypeEnum.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </Select>
               <Select
                 name=""
                 color="default"
@@ -529,12 +565,11 @@ const AddProperty: FC<Props> = () => {
                 selectedKeys={facilities}
                 onSelectionChange={setFacilities}
               >
-                {facilitiesEnum &&
-                  facilitiesEnum.map((facility) => (
-                    <SelectItem key={facility} value={facility}>
-                      {facility}
-                    </SelectItem>
-                  ))}
+                {facilitiesEnum.map((facility) => (
+                  <SelectItem key={facility} value={facility}>
+                    {facility}
+                  </SelectItem>
+                ))}
               </Select>
               <div className="flex items-end justify-start w-full">
                 <Checkbox
@@ -926,6 +961,7 @@ const AddProperty: FC<Props> = () => {
             </Button>
             <Button
               onClick={handleSubmit}
+              isLoading={submitting}
               className="bg-purple-700 active:scale-95"
             >
               Add Property

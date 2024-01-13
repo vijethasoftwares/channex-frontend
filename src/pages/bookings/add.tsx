@@ -1,6 +1,7 @@
 import Container from "@/components/container";
 import ContainerColumn from "@/components/container-column";
 import Heading from "@/components/heading";
+import { GlobalContextType } from "@/components/providers";
 import { Button as ShadcnButton } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
@@ -9,17 +10,22 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { SERVER_URL, useGlobalContext } from "@/lib/utils";
 import {
+  Avatar,
   Button,
   Input,
   Select,
   SelectItem,
+  SelectedItems,
   Selection,
 } from "@nextui-org/react";
+import axios, { AxiosError } from "axios";
 import { differenceInCalendarDays, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
+import toast from "react-hot-toast";
 import {
   BookingStatusEnum,
   BookingTypeEnum,
@@ -33,7 +39,57 @@ type Props = {
   children?: React.ReactNode;
 };
 
+interface PropertyProps {
+  _id: string;
+  name: string;
+  type: string;
+  location: string;
+  address: string;
+  coOfLocation: { type: "Point"; coordinates: [number, number] };
+  nearbyPlaces?: string[];
+  images: { label: string; url: string }[];
+  manager?: {
+    name: string;
+    email: string;
+    phoneNumber: string;
+  };
+  permissions?: string[];
+  facilities?: string[];
+  isParkingSpaceAvailable?: boolean | "true" | "false" | string;
+  isCoupleFriendly?: boolean;
+  foodMenu?: FoodMenuProps[];
+}
+
+interface FoodMenuProps {
+  day: string;
+  meals: MealData[];
+}
+
+interface MealData {
+  name: string;
+  hasMealItems?: boolean;
+  vegMealItems: string[];
+  nonVegMealItems: string[];
+}
+
 const AddBooking: FC<Props> = () => {
+  const { user } = useGlobalContext() as GlobalContextType;
+
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [property, setProperty] = useState<Selection>(new Set([]));
+  const [bookingType, setBookingType] = useState<Selection>(new Set([]));
+  const [userProperties, setUserProperties] = useState<PropertyProps[]>();
+  const [noOfGuests, setNoOfGuests] = useState<string | undefined>();
+  const [roomCategory, setRoomCategory] = useState<Selection>(new Set([]));
+  const [roomType, setRoomType] = useState<Selection>(new Set([]));
+  const [bookingStatus, setBookingStatus] = useState<Selection>(new Set([]));
+  const [paymentMethod, setPaymentMethod] = useState<Selection>(new Set([]));
+  const [paymentAmount, setPaymentAmount] = useState<string | undefined>();
+  const [primaryGuestName, setPrimaryGuestName] = useState<string>();
+  const [guestPhoneNumber, setGuestPhoneNumber] = useState<
+    string | undefined
+  >();
+  const [guestEmail, setGuestEmail] = useState<string>();
   const [date, setDate] = React.useState<DateRange | undefined>();
   const [paymentStatus, setPaymentStatus] = useState<Selection>(new Set([]));
   console.log(date);
@@ -58,6 +114,87 @@ const AddBooking: FC<Props> = () => {
     return result || "Same day stay";
   };
 
+  const handleSubmit = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    e.preventDefault();
+    if (
+      !property ||
+      !Array.from(roomCategory).toString() ||
+      !Array.from(roomType).toString() ||
+      !date?.from ||
+      !date?.to ||
+      !Array.from(paymentStatus).toString() ||
+      !noOfGuests ||
+      !Array.from(bookingType).toString() ||
+      !Array.from(bookingStatus).toString() ||
+      !primaryGuestName ||
+      !guestPhoneNumber
+    ) {
+      toast.error("Please fill all the fields");
+      return;
+    }
+    setIsLoading(true);
+    console.log(user);
+    const resObj = {
+      propertyId: Array.from(property).toString(),
+      roomCategory: Array.from(roomCategory).toString(),
+      roomType: Array.from(roomType).toString(),
+      from: date?.from,
+      to: date?.to,
+      paymentStatus: Array.from(paymentStatus).toString(),
+      numberOfGuest: parseInt(noOfGuests || "0"),
+      paymentAmount: parseInt(paymentAmount || "0"),
+      bookingType: Array.from(bookingType).toString(),
+      bookingStatus: Array.from(bookingStatus).toString(),
+      paymentMethod: Array.from(paymentMethod).toString(),
+      primaryGuestName: primaryGuestName || "",
+      guestPhoneNumber: parseInt(guestPhoneNumber || "0"),
+      guestEmail: guestEmail || "",
+      userId: user.userId,
+    };
+    try {
+      const res = await axios.post(
+        SERVER_URL + "/user/create-booking",
+        resObj,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
+        }
+      );
+      const data = await res.data;
+      console.log(data);
+      toast.success(data.message ?? "Booking created successfully");
+    } catch (error) {
+      const err = error as AxiosError & {
+        response: { data: { message: string } };
+      };
+      console.error(err.response.data.message);
+      toast.error(err.response.data.message ?? "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchUserProperties = async () => {
+      try {
+        const res = await axios.get(SERVER_URL + "/owner/get-all-properties", {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
+        });
+        const data = await res.data;
+        console.log(data);
+        setUserProperties(data.properties);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    if (user?.token) fetchUserProperties();
+  }, [user]);
+
   return (
     <Container>
       <ContainerColumn>
@@ -72,8 +209,8 @@ const AddBooking: FC<Props> = () => {
             label="Booking Type"
             labelPlacement="outside"
             placeholder="Select Booking Type"
-            // selectedKeys={}
-            // onSelectionChange={}
+            selectedKeys={bookingType}
+            onSelectionChange={setBookingType}
             radius="md"
             size="lg"
             variant="bordered"
@@ -84,6 +221,58 @@ const AddBooking: FC<Props> = () => {
               </SelectItem>
             ))}
           </Select>
+          <Select
+            items={userProperties || []}
+            label="Select Property"
+            placeholder="Select a property"
+            labelPlacement="outside"
+            variant="bordered"
+            selectedKeys={property}
+            onSelectionChange={setProperty}
+            classNames={{
+              trigger: "h-12",
+            }}
+            renderValue={(items: SelectedItems<PropertyProps>) => {
+              return items.map((item) => (
+                <div key={item.key} className="flex items-center gap-2">
+                  <Avatar
+                    alt={item.data?.name}
+                    className="flex-shrink-0"
+                    size="sm"
+                    src={item.data?.images[0]?.url}
+                  />
+                  <div className="flex flex-col">
+                    <div className="flex items-center justify-start gap-1">
+                      <span>{item.data?.name}</span>
+                      <span>({item.data?.type})</span>
+                    </div>
+                    <span className="text-default-500 text-tiny">
+                      ({item.data?.address})
+                    </span>
+                  </div>
+                </div>
+              ));
+            }}
+          >
+            {(p) => (
+              <SelectItem key={p?._id} textValue={p?.name}>
+                <div className="flex gap-2 items-center">
+                  <Avatar
+                    alt={p?.name}
+                    className="flex-shrink-0"
+                    size="sm"
+                    src={p?.images[0]?.url}
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-small">{p?.name}</span>
+                    <span className="text-tiny text-default-400">
+                      {p?.address}
+                    </span>
+                  </div>
+                </div>
+              </SelectItem>
+            )}
+          </Select>
           <Input
             type="number"
             name="noOfGuests"
@@ -92,8 +281,8 @@ const AddBooking: FC<Props> = () => {
             placeholder="Enter Number of Guests"
             color="default"
             isRequired={true}
-            // value={}
-            // onValueChange={}
+            value={noOfGuests}
+            onValueChange={setNoOfGuests}
             radius="md"
             size="lg"
             variant="bordered"
@@ -104,8 +293,8 @@ const AddBooking: FC<Props> = () => {
             label="Room Category"
             labelPlacement="outside"
             placeholder="Select Room Category"
-            // selectedKeys={}
-            // onSelectionChange={}
+            selectedKeys={roomCategory}
+            onSelectionChange={setRoomCategory}
             radius="md"
             size="lg"
             variant="bordered"
@@ -122,8 +311,8 @@ const AddBooking: FC<Props> = () => {
             label="Room Type"
             labelPlacement="outside"
             placeholder="Select Room Type"
-            // selectedKeys={}
-            // onSelectionChange={}
+            selectedKeys={roomType}
+            onSelectionChange={setRoomType}
             radius="md"
             size="lg"
             variant="bordered"
@@ -140,8 +329,8 @@ const AddBooking: FC<Props> = () => {
             label="Booking Status"
             labelPlacement="outside"
             placeholder="Select Booking Status"
-            // selectedKeys={}
-            // onSelectionChange={}
+            selectedKeys={bookingStatus}
+            onSelectionChange={setBookingStatus}
             radius="md"
             size="lg"
             variant="bordered"
@@ -233,8 +422,8 @@ const AddBooking: FC<Props> = () => {
                 label="Payment Method"
                 labelPlacement="outside"
                 placeholder="Select Payment Method"
-                // selectedKeys={}
-                // onSelectionChange={}
+                selectedKeys={paymentMethod}
+                onSelectionChange={setPaymentMethod}
                 radius="md"
                 size="lg"
                 variant="bordered"
@@ -253,8 +442,11 @@ const AddBooking: FC<Props> = () => {
                 placeholder="₹ 0.00"
                 color="default"
                 isRequired={true}
-                // value={}
-                // onValueChange={}
+                value={paymentAmount}
+                onValueChange={setPaymentAmount}
+                isDisabled={
+                  Array.from(bookingType).toString() === BookingTypeEnum[0]
+                }
                 radius="md"
                 size="lg"
                 variant="bordered"
@@ -274,8 +466,8 @@ const AddBooking: FC<Props> = () => {
             placeholder="Enter Primary Guest Name"
             color="default"
             isRequired={true}
-            // value={}
-            // onValueChange={}
+            value={primaryGuestName}
+            onValueChange={setPrimaryGuestName}
             radius="md"
             size="lg"
             variant="bordered"
@@ -288,8 +480,8 @@ const AddBooking: FC<Props> = () => {
             placeholder="Enter Guest Phone Number"
             color="default"
             isRequired={true}
-            // value={}
-            // onValueChange={}
+            value={guestPhoneNumber}
+            onValueChange={setGuestPhoneNumber}
             radius="md"
             size="lg"
             variant="bordered"
@@ -302,14 +494,20 @@ const AddBooking: FC<Props> = () => {
             placeholder="Enter Guest Email"
             color="default"
             isRequired={true}
-            // value={}
-            // onValueChange={}
+            value={guestEmail}
+            onValueChange={setGuestEmail}
             radius="md"
             size="lg"
             variant="bordered"
           />
           <div className="col-span-3 flex justify-end items-center py-5">
-            <ShadcnButton>Add Booking</ShadcnButton>
+            <ShadcnButton
+              onClick={handleSubmit}
+              isLoading={isLoading}
+              className="px-5 rounded-lg active:scale-95"
+            >
+              Create Booking
+            </ShadcnButton>
           </div>
         </div>
       </div>

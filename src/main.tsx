@@ -9,6 +9,8 @@ import "./index.css";
 import Login from "./pages/auth/login.tsx";
 import AddBooking from "./pages/bookings/add.tsx";
 import AllBooking from "./pages/bookings/all.tsx";
+import CheckIn from "./pages/bookings/check-in.tsx";
+import CheckOut from "./pages/bookings/check-out.tsx";
 import AddComplaints from "./pages/complaints/add.tsx";
 import AllComplaints from "./pages/complaints/all.tsx";
 import Analytics from "./pages/dashboard/analytics.tsx";
@@ -19,6 +21,7 @@ import Report from "./pages/dashboard/report.tsx";
 import ErrorPage from "./pages/error/index.tsx";
 import AddProperty from "./pages/property/add.tsx";
 import AllProperties from "./pages/property/all.tsx";
+import PropertyById from "./pages/property/id.tsx";
 import AddReview from "./pages/reviews/add.tsx";
 import AllReviews from "./pages/reviews/all.tsx";
 import AddRoom from "./pages/rooms/add.tsx";
@@ -66,6 +69,10 @@ const router = createBrowserRouter([
             path: "add",
             element: <AddProperty />,
           },
+          {
+            path: ":id",
+            element: <PropertyById />,
+          },
         ],
       },
       {
@@ -91,6 +98,14 @@ const router = createBrowserRouter([
           {
             path: "add",
             element: <AddBooking />,
+          },
+          {
+            path: "check-in/:id",
+            element: <CheckIn />,
+          },
+          {
+            path: "check-out/:id",
+            element: <CheckOut />,
           },
         ],
       },

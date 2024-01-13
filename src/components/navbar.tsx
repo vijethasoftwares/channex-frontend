@@ -8,11 +8,12 @@ import {
   NavbarBrand,
   NavbarContent,
   NavbarItem,
+  Spinner,
 } from "@nextui-org/react";
 import axios from "axios";
 import { PanelRightClose } from "lucide-react";
-import { FC, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { FC, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { GlobalContextType } from "./providers";
 import { UserProps } from "./types/app";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -24,9 +25,12 @@ type Props = {
 
 const NavbarComp: FC<Props> = () => {
   const { user, setUser } = useGlobalContext() as GlobalContextType;
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
+      setIsLoading(true);
       try {
         axios
           .get(`${SERVER_URL}/auth/getuser/${user?.userId}`)
@@ -35,7 +39,11 @@ const NavbarComp: FC<Props> = () => {
             setUser({ ...user, ...data.user });
           })
           .catch((error) => {
+            navigate("/login");
             console.error("Error fetching user data:", error);
+          })
+          .finally(() => {
+            setIsLoading(false);
           });
       } catch (error) {
         console.log(error);
@@ -52,6 +60,14 @@ const NavbarComp: FC<Props> = () => {
     setUser(null as unknown as UserProps);
     localStorage.removeItem("_rfou");
   };
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 w-full h-full flex justify-center items-center z-[999] bg-white">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <Navbar maxWidth="2xl" height={"auto"} position="static" className="py-4">
