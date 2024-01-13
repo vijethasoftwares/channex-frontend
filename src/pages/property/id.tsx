@@ -102,7 +102,12 @@ const PropertyById: FC<Props> = () => {
     const fetchRoomsAndProperty = async () => {
       try {
         const res = await axios.get(
-          SERVER_URL + "/manager/get-property-rooms/" + id
+          SERVER_URL + "/manager/get-property-rooms/" + id,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.token}`,
+            },
+          }
         );
         const data = (await res.data) as AxiosResponse & {
           rooms: RoomProps[];
