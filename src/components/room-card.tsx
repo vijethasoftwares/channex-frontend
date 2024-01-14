@@ -14,7 +14,7 @@ type Props = {
 
 const RoomCard: FC<Props> = ({ data, property, hideManager }) => {
   return (
-    <div className="w-full flex flex-col lg:flex-row items-stretch justify-start p-2.5 border rounded-xl gap-2.5">
+    <div className="w-full flex flex-col lg:flex-row items-stretch justify-start p-2.5 border rounded-xl gap-2.5 bg-white">
       <div className="w-full lg:w-2/6 flex flex-col gap-2.5">
         <div className="w-full bg-zinc-50 rounded-md flex">
           <Avatar className="w-full h-48 rounded-xl">

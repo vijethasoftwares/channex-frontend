@@ -154,7 +154,7 @@ const PropertyById: FC<Props> = () => {
   return (
     <div className="relative">
       {property && (
-        <div className="flex flex-col justify-start items-start gap-5 p-5 *:w-full">
+        <div className="flex flex-col justify-start items-start gap-5 first:gap-2.5 p-5 pt-2 *:w-full">
           <div className="flex justify-start">
             <Link
               to="/property"
@@ -164,7 +164,7 @@ const PropertyById: FC<Props> = () => {
               {"Back"}{" "}
             </Link>
           </div>
-          <div className="grid grid-cols-4 grid-rows-2 auto-rows-[12rem] gap-5 *:rounded-xl *:border">
+          <div className="grid grid-cols-4 grid-rows-[200px_200px] auto-rows-[12rem] gap-5 *:rounded-xl *:border">
             <div className="col-span-2 row-span-2 h-full w-full">
               <img
                 className="rounded-xl h-full w-full object-cover"
@@ -226,20 +226,21 @@ const PropertyById: FC<Props> = () => {
             </div>
           </div>
           <div>
-            <div className="mb-3 flex justify-between gap-2.5">
-              <div className="flex flex-col justify-start items-start">
-                <h3 className="text-lg font-sora font-semibold">
+            <div className="mb-3 flex justify-between items-center gap-2.5">
+              <div className="flex flex-col justify-start items-start gap-2 mt-2.5">
+                <h3 className="text-2xl font-sora font-semibold">
                   {property?.name}
                 </h3>
-                <p className="text-xs text-zinc-500">{property?.location}</p>
+                <p className="text-sm text-zinc-500">{property?.location}</p>
               </div>
-              <div className="flex flex-col justify-start items-start">
-                <h3 className="font-semibold">{property?.type}</h3>
-              </div>
+              <h3 className="font-semibold text-xl">{property?.type}</h3>
             </div>
             <Tabs
               size="lg"
-              classNames={{ tabList: "-ml-2" }}
+              classNames={{
+                tabList: "-ml-2 mt-2.5",
+                panel: "mt-2.5 p-2 rounded-lg pb-10 bg-zinc-100",
+              }}
               disableAnimation={true}
               variant="underlined"
             >
@@ -587,7 +588,7 @@ const PropertyById: FC<Props> = () => {
                 </div>
               </Tab>
               <Tab key={"amenities"} title="Amenities">
-                <div className="mt-2.5 flex flex-col justify-start items-start gap-2.5">
+                <div className="mt-2.5 flex flex-col justify-start items-start gap-2.5 pl-2.5">
                   {property.facilities &&
                     property.facilities.map((facility, i) => {
                       return (
@@ -708,7 +709,16 @@ const PropertyById: FC<Props> = () => {
                   )}
                 </div>
               </Tab>
-              <Tab key={"staffs"} title="Staffs"></Tab>
+              <Tab key={"staffs"} title="Staffs">
+                <Card shadow="none" className="p-0">
+                  <CardBody>
+                    Lorem ipsum dolor sit amet consectetur, adipisicing elit.
+                    Excepturi, molestias quidem! Possimus non repellendus ex
+                    maxime natus libero eaque! Repellat perspiciatis sequi culpa
+                    consequatur soluta, ex dolore temporibus reiciendis aliquam?
+                  </CardBody>
+                </Card>
+              </Tab>
               <Tab key={"offers-&-discounts"} title="Offers & Discounts">
                 <Card shadow="none" className="p-0">
                   <CardBody>

@@ -37,6 +37,7 @@ const NavbarComp: FC<Props> = () => {
           .then((response) => {
             const { data } = response;
             setUser({ ...user, ...data.user });
+            // navigate("/dashboard/analytics");
           })
           .catch((error) => {
             navigate("/login");

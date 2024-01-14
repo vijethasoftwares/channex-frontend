@@ -6,7 +6,7 @@ type Props = {
 
 const ContainerColumn: FC<Props> = (props) => {
   return (
-    <div className="flex flex-col justify-start items-start gap-5">
+    <div className="flex flex-col justify-start items-start gap-5 *:w-full">
       {props.children}
     </div>
   );

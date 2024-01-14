@@ -208,6 +208,7 @@ const AllBooking: FC<Props> = () => {
           slidesPerView={4}
           navigation
           className="w-full swiper-class"
+          wrapperClass="px-6"
           // pagination={{ clickable: true }}
           // scrollbar={{ draggable: true }}
           onSwiper={(swiper) => console.log(swiper)}
@@ -267,7 +268,7 @@ const AllBooking: FC<Props> = () => {
 
       {isLoading && (
         <div className="px-5 py-10 flex justify-center items-center">
-          <Loader2 className="animate-spin h-7 w-7" />
+          <Loader2 className="animate-spin h-10 w-10" />
         </div>
       )}
       {selectedProperty && !isLoading && booking.length === 0 && (

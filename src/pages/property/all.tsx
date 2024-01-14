@@ -9,7 +9,7 @@ import { Spinner } from "@nextui-org/react";
 import axios, { AxiosResponse } from "axios";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 type Props = {
   children?: React.ReactNode;
@@ -52,9 +52,11 @@ const AllProperties: FC<Props> = () => {
       <ContainerColumn>
         <ContainerBetween>
           <Heading>Manage Properties</Heading>
-          <Button className="active:scale-95 bg-purple-700">
-            + Add Property
-          </Button>
+          <Link to={"add"}>
+            <Button className="active:scale-95 bg-purple-700">
+              + Add Property
+            </Button>
+          </Link>
         </ContainerBetween>
         <Container className="space-y-5 p-0">
           <Heading variant="subheading">All Properties</Heading>

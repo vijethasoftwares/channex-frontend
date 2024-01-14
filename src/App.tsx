@@ -9,6 +9,7 @@ const App: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   useEffect(() => {
+    if (location.pathname === "/") navigate("/dashboard/analytics");
     if (user === null && !loading) {
       // document.documentElement.classList.add("dark");
       navigate("/login");

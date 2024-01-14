@@ -34,14 +34,22 @@ input[type="number"] {
 
 .swiper-class .swiper-button-prev::after,
 .swiper-class .swiper-button-next::after {
-  font-size: 3em;
-  padding: 0.45em 1em;
-  stroke: 2px soild #000;
+  font-size: 4em;
+  padding: 0.4em 0.8em;
   border-radius: 3em;
-  background-color: #000;
-  color: rgb(244, 244, 245);
+  /* background-color: #000; */
+  /* color: rgb(244, 244, 245); */
+  color: #000;
   font-family: "Sora", sans-serif;
   margin-top: -0.25em;
+  transition: 200ms;
+}
+
+.swiper-class .swiper-button-prev:hover::after,
+.swiper-class .swiper-button-next:hover::after {
+  background-color: #fff;
+  color: #000;
+  box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.1);
 }
 
 .swiper-class .swiper-button-prev::after {
@@ -53,9 +61,9 @@ input[type="number"] {
 }
 
 .swiper-class .swiper-button-prev {
-  left: 25px;
+  left: 10px;
 }
 
 .swiper-class .swiper-button-next {
-  right: 25px;
+  right: 10px;
 }

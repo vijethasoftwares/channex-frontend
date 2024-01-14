@@ -11,6 +11,7 @@ import { Spinner } from "@nextui-org/react";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 type Props = {
   children?: React.ReactNode;
@@ -90,7 +91,11 @@ const AllRooms: FC<Props> = () => {
       <ContainerColumn>
         <ContainerBetween>
           <Heading>All Rooms</Heading>
-          <Button className="active:scale-95 bg-purple-700">+ Add Room</Button>
+          <Link to={"add"}>
+            <Button className="active:scale-95 bg-purple-700">
+              + Add Room
+            </Button>
+          </Link>
         </ContainerBetween>
         <Heading variant="subtitle">Select a property to view bookings</Heading>
         <div className="rounded-lg grid grid-cols-4 gap-2.5">
