@@ -206,7 +206,7 @@ const CheckIn: FC<Props> = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-14 px-5">
-        <Spinner size="lg" label="loading booking data..." color="default" />
+        <Spinner size="lg" label="loading booking data..." />
       </div>
     );
   }

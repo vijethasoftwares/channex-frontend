@@ -22,6 +22,16 @@ import { CheckSquare2, Eye, Loader2, Trash } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
+import { A11y, Navigation, Pagination, Scrollbar } from "swiper/modules";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+
+// Import Swiper styles
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/scrollbar";
+
 import { BookingStatusEnum } from "./CONSTS";
 
 type Props = {
@@ -40,6 +50,10 @@ const AllBooking: FC<Props> = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selected, setSelected] = useState<number | string>(
     BookingTabsEnum.CURRENT.replace(" ", "-").toLowerCase()
+  );
+  const [search, setSearch] = useState<string>("");
+  const [filteredProperties, setFilteredProperties] = useState<PropertyProps[]>(
+    []
   );
   const [userProperties, setUserProperties] = useState<PropertyProps[]>();
   const [selectedProperty, setSelectedProperty] = useState<PropertyProps>();
@@ -113,6 +127,18 @@ const AllBooking: FC<Props> = () => {
     setFilteredBookingHistory(filtered);
   };
 
+  const handleFilterProperty = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!userProperties) return;
+    if (e.target.value === "") {
+      setFilteredProperties(userProperties);
+      return;
+    }
+    const filtered = userProperties.filter((property) =>
+      property.name.toLowerCase().includes(e.target.value.toLowerCase())
+    );
+    setFilteredProperties(filtered);
+  };
+
   useEffect(() => {
     console.log(selected);
   }, [selected]);
@@ -127,6 +153,7 @@ const AllBooking: FC<Props> = () => {
       const data = await res.data;
       console.log(data.properties);
       setUserProperties(data.properties);
+      setFilteredProperties(data.properties);
       setSelectedProperty(data.properties[0]);
     } catch (error) {
       console.error(error);
@@ -157,23 +184,85 @@ const AllBooking: FC<Props> = () => {
             </Button>
           </Link>
         </ContainerBetween>
-        <Heading variant="subtitle">Select a property to view bookings</Heading>
-        <div className="rounded-lg grid grid-cols-4 gap-2.5">
-          {userProperties?.map((property) => {
+        <Heading variant="subtitle">
+          Search or select a property to view bookings
+        </Heading>
+        {/* <div className="rounded-lg grid grid-cols-4 gap-5"> */}
+        <div className="w-full">
+          <Input
+            type="text"
+            // label="Search Properties"
+            // labelPlacement="outside"
+            value={search}
+            onValueChange={setSearch}
+            onChange={handleFilterProperty}
+            variant="bordered"
+            size="sm"
+            radius="md"
+            placeholder="Search properties"
+          />
+        </div>
+        <Swiper
+          modules={[Navigation, Pagination, Scrollbar, A11y]}
+          spaceBetween={-20}
+          slidesPerView={4}
+          navigation
+          className="w-full swiper-class"
+          // pagination={{ clickable: true }}
+          // scrollbar={{ draggable: true }}
+          onSwiper={(swiper) => console.log(swiper)}
+          onSlideChange={() => console.log("slide change")}
+        >
+          {filteredProperties?.map((property) => {
             return (
-              <div
-                onClick={() => setSelectedProperty(property)}
-                className={cn(
-                  "py-4 px-5 bg-zinc-100 rounded-md duration-150 ring-zinc-100 hover:ring-2 hover:bg-white cursor-pointer",
-                  selectedProperty?._id === property._id && "ring-4 bg-white"
-                )}
-              >
-                <h3 className="text-base font-semibold">{property.name}</h3>
-                <p className="text-xs text-zinc-600">{property.location}</p>
-              </div>
+              <SwiperSlide className="p-5">
+                <div
+                  onClick={() => setSelectedProperty(property)}
+                  className={cn(
+                    "py-4 px-5 bg-zinc-100 rounded-md duration-150 ring-zinc-100 hover:ring-2 hover:bg-white cursor-pointer",
+                    selectedProperty?._id === property._id && "ring-4 bg-white"
+                  )}
+                >
+                  <h3 className="text-base font-semibold">{property.name}</h3>
+                  <p className="text-xs text-zinc-600">{property.location}</p>
+                </div>
+              </SwiperSlide>
             );
           })}
-        </div>
+          {filteredProperties?.map((property) => {
+            return (
+              <SwiperSlide className="p-5">
+                <div
+                  onClick={() => setSelectedProperty(property)}
+                  className={cn(
+                    "py-4 px-5 bg-zinc-100 rounded-md duration-150 ring-zinc-100 hover:ring-2 hover:bg-white cursor-pointer",
+                    selectedProperty?._id === property._id && "ring-4 bg-white"
+                  )}
+                >
+                  <h3 className="text-base font-semibold">{property.name}</h3>
+                  <p className="text-xs text-zinc-600">{property.location}</p>
+                </div>
+              </SwiperSlide>
+            );
+          })}
+          {filteredProperties?.map((property) => {
+            return (
+              <SwiperSlide className="p-5">
+                <div
+                  onClick={() => setSelectedProperty(property)}
+                  className={cn(
+                    "py-4 px-5 bg-zinc-100 rounded-md duration-150 ring-zinc-100 hover:ring-2 hover:bg-white cursor-pointer",
+                    selectedProperty?._id === property._id && "ring-4 bg-white"
+                  )}
+                >
+                  <h3 className="text-base font-semibold">{property.name}</h3>
+                  <p className="text-xs text-zinc-600">{property.location}</p>
+                </div>
+              </SwiperSlide>
+            );
+          })}
+        </Swiper>
+        {/* </div> */}
       </ContainerColumn>
 
       {isLoading && (
