@@ -58,22 +58,11 @@ const RoomCard: FC<Props> = ({ data, property, hideManager }) => {
               )}
             </p>
             {/* <Heading variant="body">{data.description}</Heading> */}
-            <Heading variant="caption">{data?.roomSize}sq feet</Heading>
+            <Heading variant="caption">{data?.roomSize} sq feet</Heading>
           </div>
           <div className="flex flex-col gap-2.5">
+            <div className="flex justify-start items-start gap-2.5 flex-wrap"></div>
             <div className="flex justify-start items-start gap-2.5 flex-wrap">
-              {/* {data.facilities?.map((facility, i) => {
-                return (
-                  <Badge key={i} variant={"outline"} className="text-xs">
-                    {facility}
-                  </Badge>
-                );
-              })} */}
-            </div>
-            <div className="flex justify-start items-start gap-2.5 flex-wrap">
-              {/* <Badge className="py-1.5" variant={"outline"}>
-                Status: {data.status}
-              </Badge> */}
               <Badge className="py-1.5" variant={"outline"}>
                 Max Occupancy: {data?.maxOccupancy}
               </Badge>

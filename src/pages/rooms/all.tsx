@@ -7,6 +7,7 @@ import RoomCard from "@/components/room-card";
 import { PropertyProps, RoomProps } from "@/components/types/app";
 import { Button } from "@/components/ui/button";
 import { SERVER_URL, cn, useGlobalContext } from "@/lib/utils";
+import { Spinner } from "@nextui-org/react";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
@@ -19,6 +20,7 @@ const AllRooms: FC<Props> = () => {
   const { user } = useGlobalContext() as GlobalContextType;
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isPropertyLoading, setIsPropertyLoading] = useState<boolean>(false);
   const [rooms, setRooms] = useState<RoomProps[]>();
   const [userProperties, setUserProperties] = useState<PropertyProps[]>();
   const [selectedProperty, setSelectedProperty] = useState<PropertyProps>();
@@ -45,6 +47,7 @@ const AllRooms: FC<Props> = () => {
 
   const fetchUserProperties = async () => {
     try {
+      setIsPropertyLoading(true);
       const res = await axios.get(SERVER_URL + "/owner/get-all-properties", {
         headers: {
           Authorization: `Bearer ${user?.token}`,
@@ -56,6 +59,8 @@ const AllRooms: FC<Props> = () => {
       setSelectedProperty(data.properties[0]);
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsPropertyLoading(false);
     }
   };
 
@@ -72,6 +77,14 @@ const AllRooms: FC<Props> = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  if (isPropertyLoading) {
+    return (
+      <div className="flex justify-center items-center px-5 py-10 w-full">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
   return (
     <Container>
       <ContainerColumn>
@@ -98,7 +111,7 @@ const AllRooms: FC<Props> = () => {
         </div>
         {isLoading && (
           <div className="flex justify-center items-center px-5 py-10 w-full">
-            <Loader2 className=" w-6 h-6 animate-spin" />
+            <Loader2 className="w-10 h-10 animate-spin text-black" />
           </div>
         )}
         {rooms &&

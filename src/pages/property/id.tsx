@@ -164,7 +164,7 @@ const PropertyById: FC<Props> = () => {
               {"Back"}{" "}
             </Link>
           </div>
-          <div className="grid grid-cols-4 grid-rows-2 auto-rows-[12rem] gap-5 *:rounded-xl">
+          <div className="grid grid-cols-4 grid-rows-2 auto-rows-[12rem] gap-5 *:rounded-xl *:border">
             <div className="col-span-2 row-span-2 h-full w-full">
               <img
                 className="rounded-xl h-full w-full object-cover"
@@ -172,7 +172,7 @@ const PropertyById: FC<Props> = () => {
                 alt={property.images[0]?.label}
               />
             </div>
-            <div className="h-48">
+            <div>
               <Avatar className="w-full h-full rounded-xl">
                 <AvatarImage
                   src={property?.images[1]?.url ? property?.images[1].url : ""}
@@ -185,7 +185,7 @@ const PropertyById: FC<Props> = () => {
                 </AvatarFallback>
               </Avatar>
             </div>
-            <div className="h-48">
+            <div>
               <Avatar className="w-full h-full rounded-xl">
                 <AvatarImage
                   src={property?.images[2]?.url ? property?.images[2].url : ""}
@@ -198,7 +198,7 @@ const PropertyById: FC<Props> = () => {
                 </AvatarFallback>
               </Avatar>
             </div>
-            <div className="h-48">
+            <div>
               <Avatar className="w-full h-full rounded-xl">
                 <AvatarImage
                   src={property?.images[3]?.url ? property?.images[3].url : ""}
@@ -211,7 +211,7 @@ const PropertyById: FC<Props> = () => {
                 </AvatarFallback>
               </Avatar>
             </div>
-            <div className="h-48">
+            <div>
               <Avatar className="w-full h-full rounded-xl">
                 <AvatarImage
                   src={property?.images[4]?.url ? property?.images[4].url : ""}
@@ -703,6 +703,9 @@ const PropertyById: FC<Props> = () => {
                       </div>
                     );
                   })}
+                  {Array.from(guestsByRoom).length === 0 && (
+                    <Heading variant="subtitle">No guests found</Heading>
+                  )}
                 </div>
               </Tab>
               <Tab key={"staffs"} title="Staffs"></Tab>

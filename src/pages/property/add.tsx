@@ -40,6 +40,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, X } from "lucide-react";
 import React, { FC, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import {
   DaysEnum,
   MealNameEnum,
@@ -113,7 +114,7 @@ const AddProperty: FC<Props> = () => {
   const [name, setName] = useState<string>("");
   const [propertyType, setPropertyType] = useState<Selection>(new Set([]));
   const [coupleFriendly, setCoupleFriendly] = useState<boolean>(false);
-  const [images, setImages] = useState<File[]>([]);
+  const [images, setImages] = useState<{ label: string; url: string }[]>([]);
   const [permissions, setPermissions] = useState<Selection>(new Set([]));
   const [isParkingSpaceAvailable, setIsParkingSpaceAvailable] =
     useState<Selection>(new Set(["false"]));
@@ -183,6 +184,8 @@ const AddProperty: FC<Props> = () => {
     onOpenChange: onOpenChangeFoodMenu,
   } = useDisclosure();
 
+  const navigate = useNavigate();
+
   const handleLocationInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLocation(event.target.value);
   };
@@ -244,9 +247,13 @@ const AddProperty: FC<Props> = () => {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length + images.length <= 5) {
-      setImages([...images, ...Array.from(e.target.files)]);
+      const imagesLinks = await uploadImagesToFirebase(
+        Array.from(e.target.files) as File[]
+      );
+      setImages([...images, ...imagesLinks]);
+      // setImages([...images, ...Array.from(e.target.files)]);
     } else {
       toast.error("You can only upload 5 images");
     }
@@ -265,8 +272,8 @@ const AddProperty: FC<Props> = () => {
     const p = Array.from(permissions) as string[];
     const f = Array.from(facilities) as string[];
     const ipsa = Array.from(isParkingSpaceAvailable) as string[];
-    console.log(coordinate);
-    const imagesLinks = await uploadImagesToFirebase(images);
+    // console.log(coordinate);
+    // const imagesLinks = await uploadImagesToFirebase(images);
     const property: PropertyProps = {
       name: name,
       type: Array.from(propertyType).toString(),
@@ -276,7 +283,7 @@ const AddProperty: FC<Props> = () => {
         type: "Point",
         coordinates: [coordinate.lat, coordinate.lng],
       },
-      images: imagesLinks,
+      images,
       nearbyPlaces: np,
       permissions: p,
       facilities: f,
@@ -304,6 +311,7 @@ const AddProperty: FC<Props> = () => {
       const data = await res.data;
       console.log(data, "data");
       toast.success(data.message || "Property added successfully");
+      navigate("/property");
     } catch (error) {
       const err = error as AxiosError & { response: AxiosResponse };
       console.log(err.response);
@@ -317,6 +325,7 @@ const AddProperty: FC<Props> = () => {
     const imageUrls = [];
 
     try {
+      toast.loading("Uploading images...");
       for (const image of images) {
         const imageRef = ref(
           storage,
@@ -333,6 +342,9 @@ const AddProperty: FC<Props> = () => {
     } catch (error) {
       console.error("Error uploading images:", error);
       return [];
+    } finally {
+      toast.dismiss();
+      toast.success("Images uploaded successfully");
     }
   };
 
@@ -898,7 +910,7 @@ const AddProperty: FC<Props> = () => {
               >
                 <AnimatePresence>
                   {images.map((image, index) => (
-                    <AnimatePresence key={image.name}>
+                    <AnimatePresence key={image.label}>
                       <motion.div
                         layout
                         initial={{
@@ -920,7 +932,7 @@ const AddProperty: FC<Props> = () => {
                       >
                         <img
                           key={index}
-                          src={URL.createObjectURL(image)}
+                          src={image.url}
                           alt={`Uploaded ${index}`}
                           className="min-h-20 w-full object-cover h-full rounded-md"
                         />

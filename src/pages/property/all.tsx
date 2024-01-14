@@ -2,10 +2,10 @@ import Container from "@/components/container";
 import ContainerBetween from "@/components/container-between";
 import ContainerColumn from "@/components/container-column";
 import Heading from "@/components/heading";
-import Loader from "@/components/loader";
 import PropertyCard from "@/components/property-card";
 import { Button } from "@/components/ui/button";
 import { SERVER_URL } from "@/lib/utils";
+import { Spinner } from "@nextui-org/react";
 import axios, { AxiosResponse } from "axios";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -38,6 +38,15 @@ const AllProperties: FC<Props> = () => {
   useEffect(() => {
     fetchProperties();
   }, [pathname]);
+
+  if (loading) {
+    return (
+      <div className="px-5 py-10 flex justify-center items-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
   return (
     <Container>
       <ContainerColumn>
@@ -49,7 +58,6 @@ const AllProperties: FC<Props> = () => {
         </ContainerBetween>
         <Container className="space-y-5 p-0">
           <Heading variant="subheading">All Properties</Heading>
-          {loading && <Loader />}
           {properties.length > 0 &&
             properties.map((property, i) => {
               return <PropertyCard key={i} data={property} />;
