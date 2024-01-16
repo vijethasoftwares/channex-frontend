@@ -126,9 +126,7 @@ const AllRooms: FC<Props> = () => {
             </Link>
           </div>
         </ContainerBetween>
-        <Heading variant="subtitle">
-          Search or select a property to view bookings
-        </Heading>
+        <Heading variant="subtitle">Search or select a room</Heading>
         <Input
           type="text"
           onChange={(e) => {
@@ -145,7 +143,7 @@ const AllRooms: FC<Props> = () => {
           variant="bordered"
           size="sm"
           radius="md"
-          placeholder="Search properties"
+          placeholder="Search rooms"
         />
         {isLoading && (
           <div className="flex justify-center items-center px-5 py-10 w-full">

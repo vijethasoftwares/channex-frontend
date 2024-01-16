@@ -179,6 +179,11 @@ const AddProperty: FC<Props> = () => {
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
+    isOpen: isOpenDocuments,
+    onOpen: onOpenDocuments,
+    onOpenChange: onOpenChangeDocuments,
+  } = useDisclosure();
+  const {
     isOpen: isOpenFoodMenu,
     onOpen: onOpenFoodMenu,
     onOpenChange: onOpenChangeFoodMenu,
@@ -965,6 +970,13 @@ const AddProperty: FC<Props> = () => {
               Cancel
             </Button>
             <Button
+              onClick={onOpenDocuments}
+              variant="outline"
+              className=" active:scale-95"
+            >
+              Add Documents
+            </Button>
+            <Button
               onClick={onOpen}
               variant="outline"
               className=" active:scale-95"
@@ -983,11 +995,65 @@ const AddProperty: FC<Props> = () => {
       </Container>
 
       <Modal
-        isDismissable={false}
         backdrop="blur"
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
+        isOpen={isOpenDocuments}
+        onOpenChange={onOpenChangeDocuments}
       >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                Add Documents
+              </ModalHeader>
+              <ModalBody>
+                <Input
+                  autoFocus
+                  label="Name"
+                  labelPlacement="outside"
+                  placeholder="Enter manager name"
+                  variant="bordered"
+                  size="lg"
+                  radius="md"
+                  // value={managerName}
+                  // onValueChange={setManagerName}
+                  isRequired
+                />
+                <Input
+                  autoFocus
+                  label="Email"
+                  labelPlacement="outside"
+                  placeholder="Enter manager email"
+                  variant="bordered"
+                  size="lg"
+                  radius="md"
+                  // value={managerEmail}
+                  // onValueChange={setManagerEmail}
+                  isRequired
+                />
+                <Input
+                  autoFocus
+                  type="number"
+                  label="Phone Number"
+                  labelPlacement="outside"
+                  placeholder="Enter manager phone number"
+                  variant="bordered"
+                  size="lg"
+                  radius="md"
+                  // value={managerPhoneNumber}
+                  // onValueChange={setManagerPhoneNumber}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button className="px-8" variant="ghost" onClick={onClose}>
+                  Close
+                </Button>
+                <Button className="px-8">Add</Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+      <Modal backdrop="blur" isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           {(onClose) => (
             <>
