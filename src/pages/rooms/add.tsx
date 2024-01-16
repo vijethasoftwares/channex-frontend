@@ -30,6 +30,7 @@ import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { CalendarIcon, Info } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   children?: React.ReactNode;
@@ -154,6 +155,8 @@ const AddRoom: FC<Props> = () => {
     ""
   );
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (userProperties) {
       const prop = userProperties.find((p: PropertyProps) => {
@@ -192,7 +195,7 @@ const AddRoom: FC<Props> = () => {
   ) => {
     toast.loading("Uploading Images...");
     const { name, files } = event.target;
-    if (!files) {
+    if (!files || files?.length == 0 || !name) {
       toast.dismiss();
       toast.error("No images selected");
       return;
@@ -223,7 +226,6 @@ const AddRoom: FC<Props> = () => {
       toast.error("Please fill all the fields");
       return;
     }
-    toast.loading("Adding Room...");
 
     const p = Array.from(property).toString();
     const rc = Array.from(roomCategory).toString();
@@ -242,17 +244,11 @@ const AddRoom: FC<Props> = () => {
       propertyId: p,
       guestDetails,
       roomPricePerDay: parseInt(roomPricePerDay || "0"),
-      // roomImage,
-      // washroomImage,
-      // bedImage,
-      // additionalImages,
       images,
       roomFacilities: rf,
     };
-    console.log(obj);
-    // toast.dismiss();
-    // return;
     try {
+      toast.loading("Adding Room...");
       const res = await axios.post(SERVER_URL + "/manager/create-room", obj, {
         headers: {
           Authorization: `Bearer ${user?.token}`,
@@ -260,13 +256,14 @@ const AddRoom: FC<Props> = () => {
       });
       const data = await res.data();
       console.log(data);
-      toast.dismiss();
-      toast.success("Room Added Successfully!");
+      navigate("/rooms");
     } catch (error) {
       const err = error as AxiosError & { response: AxiosResponse };
       console.error(err);
-      toast.dismiss();
       toast.error(err.response.data?.message || "Something went wrong!");
+    } finally {
+      toast.dismiss();
+      toast.success("Room Added Successfully!");
     }
   };
 

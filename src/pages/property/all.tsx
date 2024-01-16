@@ -3,31 +3,39 @@ import ContainerBetween from "@/components/container-between";
 import ContainerColumn from "@/components/container-column";
 import Heading from "@/components/heading";
 import PropertyCard from "@/components/property-card";
+import { GlobalContextType } from "@/components/providers";
+import { PropertyProps } from "@/components/types/app";
 import { Button } from "@/components/ui/button";
-import { SERVER_URL } from "@/lib/utils";
-import { Spinner } from "@nextui-org/react";
+import { SERVER_URL, useGlobalContext } from "@/lib/utils";
+import { Input, Spinner } from "@nextui-org/react";
 import axios, { AxiosResponse } from "axios";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 type Props = {
   children?: React.ReactNode;
 };
 
 const AllProperties: FC<Props> = () => {
-  const [properties, setProperties] = useState([]);
+  const { user } = useGlobalContext() as GlobalContextType;
+  const [properties, setProperties] = useState<PropertyProps[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<PropertyProps[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
-  const pathname = useLocation().pathname;
 
   const fetchProperties = async () => {
     try {
-      const res = (await axios.get(
-        SERVER_URL + "/owner/get-all-properties"
-      )) as AxiosResponse;
+      const res = (await axios.get(SERVER_URL + "/owner/get-all-properties", {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      })) as AxiosResponse;
       const data = res.data;
       const { properties } = data;
       setProperties(properties);
+      setFilteredProperties(properties);
       console.log(data);
     } catch (error) {
       toast.error((error as Error)?.message || "An error occurred");
@@ -36,8 +44,18 @@ const AllProperties: FC<Props> = () => {
     }
   };
   useEffect(() => {
-    fetchProperties();
-  }, [pathname]);
+    if (user?.userId) fetchProperties();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const value = e.target.value;
+    const filtered = properties.filter((property) => {
+      return property.name.toLowerCase().includes(value.toLowerCase());
+    });
+    setFilteredProperties(filtered);
+  };
 
   if (loading) {
     return (
@@ -51,7 +69,7 @@ const AllProperties: FC<Props> = () => {
     <Container>
       <ContainerColumn>
         <ContainerBetween>
-          <Heading>Manage Properties</Heading>
+          <Heading>All Properties</Heading>
           <Link to={"add"}>
             <Button className="active:scale-95 bg-purple-700">
               + Add Property
@@ -59,12 +77,23 @@ const AllProperties: FC<Props> = () => {
           </Link>
         </ContainerBetween>
         <Container className="space-y-5 p-0">
-          <Heading variant="subheading">All Properties</Heading>
-          {properties.length > 0 &&
-            properties.map((property, i) => {
+          <Heading variant="subtitle">
+            Search or select a property to view bookings
+          </Heading>
+          <Input
+            type="text"
+            onChange={handleSearch}
+            variant="bordered"
+            size="sm"
+            radius="md"
+            placeholder="Search properties"
+          />
+
+          {filteredProperties.length > 0 &&
+            filteredProperties.map((property, i) => {
               return <PropertyCard key={i} data={property} />;
             })}
-          {properties.length === 0 && !loading && (
+          {filteredProperties.length === 0 && !loading && (
             <Heading variant="caption">No properties found</Heading>
           )}
         </Container>

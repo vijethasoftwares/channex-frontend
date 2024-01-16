@@ -1,20 +1,35 @@
-import { Home, User2 } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  ArrowDownToLine,
+  Home,
+  MoreVertical,
+  Pencil,
+  Trash,
+  User2,
+} from "lucide-react";
 import React, { FC } from "react";
 import Heading from "./heading";
-import { PropertyProps, RoomProps } from "./types/app";
+import { RoomProps } from "./types/app";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 type Props = {
   children?: React.ReactNode;
   data: RoomProps;
-  property?: PropertyProps;
-  hideManager?: boolean;
 };
 
-const RoomCard: FC<Props> = ({ data, property, hideManager }) => {
+const RoomCard: FC<Props> = ({ data }) => {
   return (
-    <div className="w-full flex flex-col lg:flex-row items-stretch justify-start p-2.5 border rounded-xl gap-2.5 bg-white">
+    <motion.div
+      layout="position"
+      className="relative w-full flex flex-col lg:flex-row items-stretch justify-start p-2.5 border rounded-xl gap-2.5 bg-white"
+    >
       <div className="w-full lg:w-2/6 flex flex-col gap-2.5">
         <div className="w-full bg-zinc-50 rounded-md flex">
           <Avatar className="w-full h-48 rounded-xl">
@@ -41,12 +56,31 @@ const RoomCard: FC<Props> = ({ data, property, hideManager }) => {
           </div>
         </div>
       </div>
+      <div className="absolute right-5 top-5 flex justify-end z-[99]">
+        <DropdownMenu>
+          <DropdownMenuTrigger>
+            <MoreVertical className="w-5 h-5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="-translate-x-20 translate-y-3">
+            <DropdownMenuItem>
+              <Pencil className="w-4 h-4 mr-2" /> Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem className="hover:bg-rose-50 hover:text-rose-600">
+              <Trash className="w-4 h-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <ArrowDownToLine className="w-4 h-4 mr-2" /> Download Report
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <div className="w-full p-3 flex-1">
         <div className="w-full h-full flex flex-col justify-between items-start">
           <div className="flex flex-col justify-start items-start gap-2.5">
-            <Heading variant="body" className="text-zinc-500">
+            {/* <Heading variant="body" className="text-zinc-500">
               {property?.name}
-            </Heading>
+            </Heading> */}
             <Heading variant="subheading">
               {data?.roomNumber} ({data?.roomCategory} - {data?.roomType})
             </Heading>
@@ -75,14 +109,9 @@ const RoomCard: FC<Props> = ({ data, property, hideManager }) => {
           </div>
         </div>
       </div>
-      <div className="px-4 py-3 bg-zinc-50 rounded-lg flex items-end justify-end">
-        <div className="flex flex-col justify-between items-start gap-2.5 h-full w-full">
-          <div className="flex flex-col justify-end items-start gap-2.5">
-            {!hideManager && (
-              <span className="text-xs font-semibold">Manager Details:</span>
-            )}
-          </div>
-          <div className="flex flex-col justify-end items-start gap-2.5">
+      <div className=" rounded-lg flex items-end justify-end">
+        <div className="flex flex-col justify-end items-start gap-2.5 h-full w-full">
+          <div className="px-4 py-3 bg-zinc-50 flex flex-col justify-end items-start gap-2.5">
             <span className="text-xs font-semibold">Price:</span>
             <span className="text-lg font-semibold">
               {data?.pricePerMonth
@@ -92,7 +121,7 @@ const RoomCard: FC<Props> = ({ data, property, hideManager }) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

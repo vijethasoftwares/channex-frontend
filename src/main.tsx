@@ -18,6 +18,7 @@ import Billing from "./pages/dashboard/billing.tsx";
 import CorporatePortal from "./pages/dashboard/corporate-portal.tsx";
 import Guests from "./pages/dashboard/guests.tsx";
 import Report from "./pages/dashboard/report.tsx";
+import Users from "./pages/dashboard/users.tsx";
 import ErrorPage from "./pages/error/index.tsx";
 import AddProperty from "./pages/property/add.tsx";
 import AllProperties from "./pages/property/all.tsx";
@@ -55,6 +56,10 @@ const router = createBrowserRouter([
           {
             path: "billing",
             element: <Billing />,
+          },
+          {
+            path: "users",
+            element: <Users />,
           },
         ],
       },

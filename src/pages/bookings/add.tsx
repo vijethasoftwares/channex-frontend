@@ -26,6 +26,7 @@ import { CalendarIcon } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import {
   BookingStatusEnum,
   BookingTypeEnum,
@@ -93,6 +94,8 @@ const AddBooking: FC<Props> = () => {
   const [date, setDate] = React.useState<DateRange | undefined>();
   const [paymentStatus, setPaymentStatus] = useState<Selection>(new Set([]));
   console.log(date);
+
+  const navigate = useNavigate();
 
   const getDifferenceInMonthsAndDays = (from: Date, to: Date) => {
     let diffInDays = differenceInCalendarDays(to, from);
@@ -166,6 +169,7 @@ const AddBooking: FC<Props> = () => {
       const data = await res.data;
       console.log(data);
       toast.success(data.message ?? "Booking created successfully");
+      navigate("/bookings");
     } catch (error) {
       const err = error as AxiosError & {
         response: { data: { message: string } };
@@ -445,7 +449,7 @@ const AddBooking: FC<Props> = () => {
                 value={paymentAmount}
                 onValueChange={setPaymentAmount}
                 isDisabled={
-                  Array.from(bookingType).toString() === BookingTypeEnum[0]
+                  Array.from(bookingType).toString() === PaymentStatusEnum[1]
                 }
                 radius="md"
                 size="lg"
