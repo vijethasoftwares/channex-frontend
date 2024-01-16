@@ -25,11 +25,7 @@ dist-ssr
 *.sw?
 
 # Environment Variables
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env
+
 
 server
 code/**/*.js
