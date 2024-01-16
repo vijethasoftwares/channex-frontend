@@ -193,13 +193,19 @@ const AddRoom: FC<Props> = () => {
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    toast.loading("Uploading Images...");
     const { name, files } = event.target;
     if (!files || files?.length == 0 || !name) {
-      toast.dismiss();
       toast.error("No images selected");
       return;
     }
+    // check image size
+    for (const file of Array.from(files)) {
+      if (file.size > 1024 * 1024 * 1) {
+        toast.error("Image size should be less than 1MB");
+        return;
+      }
+    }
+    toast.loading("Uploading Images...");
     const images = await uploadImagesToFirebase(Array.from(files!));
 
     setImages((prevImages) => ({
