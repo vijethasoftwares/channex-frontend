@@ -583,7 +583,7 @@ const PropertyById: FC<Props> = () => {
                 <div className="flex flex-col justify-start items-start gap-2.5">
                   {rooms &&
                     rooms?.map((room, i) => {
-                      return <RoomCard hideManager key={i} data={room} />;
+                      return <RoomCard key={i} data={room} />;
                     })}
                 </div>
               </Tab>
