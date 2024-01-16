@@ -14,24 +14,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SERVER_URL, cn, useGlobalContext } from "@/lib/utils";
-import { Card, CardBody, Input, Tab, Tabs } from "@nextui-org/react";
+import { SERVER_URL, useGlobalContext } from "@/lib/utils";
+import {
+  Card,
+  CardBody,
+  Input,
+  Select,
+  SelectItem,
+  Tab,
+  Tabs,
+} from "@nextui-org/react";
 import axios, { AxiosError } from "axios";
 import dayjs from "dayjs";
 import { CheckSquare2, Eye, Loader2, Trash } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
-import { A11y, Navigation, Pagination, Scrollbar } from "swiper/modules";
-
-import { Swiper, SwiperSlide } from "swiper/react";
-
-// Import Swiper styles
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-import "swiper/css/scrollbar";
-
 import { BookingStatusEnum } from "./CONSTS";
 
 type Props = {
@@ -51,14 +49,12 @@ const AllBooking: FC<Props> = () => {
   const [selected, setSelected] = useState<number | string>(
     BookingTabsEnum.CURRENT.replace(" ", "-").toLowerCase()
   );
-  const [search, setSearch] = useState<string>("");
-  const [filteredProperties, setFilteredProperties] = useState<PropertyProps[]>(
-    []
-  );
+  // const [search, setSearch] = useState<string>("");
   const [userProperties, setUserProperties] = useState<PropertyProps[]>();
-  const [selectedProperty, setSelectedProperty] = useState<PropertyProps>();
+  // const [selectedProperty, setSelectedProperty] = useState<PropertyProps>();
   const [booking, setBooking] = useState<BookingProps[]>([]);
   const [filteredBooking, setFilteredBooking] = useState<BookingProps[]>([]);
+  const [currentBooking, setCurrentBooking] = useState<BookingProps[]>([]);
   const [upcomingBooking, setUpcomingBooking] = useState<BookingProps[]>([]);
   const [bookingHistory, setBookingHistory] = useState<BookingProps[]>([]);
   const [filteredUpcomingBooking, setFilteredUpcomingBooking] = useState<
@@ -67,6 +63,7 @@ const AllBooking: FC<Props> = () => {
   const [filteredBookingHistory, setFilteredBookingHistory] = useState<
     BookingProps[]
   >([]);
+  const [selectedProperty, setSelectedProperty] = useState<string>("");
 
   const fetchBookingsByProperty = async (id: string) => {
     setIsLoading(true);
@@ -84,8 +81,6 @@ const AllBooking: FC<Props> = () => {
         (booking: BookingProps) =>
           booking.isCheckedIn === true && booking.isCheckedOut === false
       );
-      setBooking(data.bookings);
-      setFilteredBooking(current);
       const upcoming = data.bookings.filter(
         (booking: BookingProps) =>
           booking.isCheckedIn === false && booking.isCheckedOut === false
@@ -94,8 +89,11 @@ const AllBooking: FC<Props> = () => {
         (booking: BookingProps) =>
           booking.isCheckedIn === true && booking.isCheckedOut === true
       );
+      setBooking(data.bookings);
+      setCurrentBooking(current);
       setUpcomingBooking(upcoming);
       setBookingHistory(history);
+      setFilteredBooking(current);
       setFilteredUpcomingBooking(upcoming);
       setFilteredBookingHistory(history);
       console.log(data);
@@ -106,37 +104,30 @@ const AllBooking: FC<Props> = () => {
     }
   };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const filtered = booking.filter((booking) =>
-      booking.primaryGuestName.toLowerCase().includes(e.target.value)
+  const handleCurrentBookings = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const filtered = currentBooking.filter((booking) =>
+      booking?.guestName?.toLowerCase().includes(e.target.value)
     );
     setFilteredBooking(filtered);
   };
 
   const handleFilterUpcoming = (e: React.ChangeEvent<HTMLInputElement>) => {
     const filtered = upcomingBooking.filter((booking) =>
-      booking.primaryGuestName.toLowerCase().includes(e.target.value)
+      booking?.guestName?.toLowerCase().includes(e.target.value)
     );
     setFilteredUpcomingBooking(filtered);
   };
 
   const handleFilterHistory = (e: React.ChangeEvent<HTMLInputElement>) => {
     const filtered = bookingHistory.filter((booking) =>
-      booking.primaryGuestName.toLowerCase().includes(e.target.value)
+      booking?.guestName?.toLowerCase().includes(e.target.value)
     );
     setFilteredBookingHistory(filtered);
   };
 
-  const handleFilterProperty = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!userProperties) return;
-    if (e.target.value === "") {
-      setFilteredProperties(userProperties);
-      return;
-    }
-    const filtered = userProperties.filter((property) =>
-      property.name.toLowerCase().includes(e.target.value.toLowerCase())
-    );
-    setFilteredProperties(filtered);
+  const handleSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // e.preventDefault();
+    setSelectedProperty(e.target.value);
   };
 
   useEffect(() => {
@@ -153,16 +144,16 @@ const AllBooking: FC<Props> = () => {
       const data = await res.data;
       console.log(data.properties);
       setUserProperties(data.properties);
-      setFilteredProperties(data.properties);
-      setSelectedProperty(data.properties[0]);
+      // setFilteredProperties(data.properties);
+      setSelectedProperty(data.properties[0]._id);
     } catch (error) {
       console.error(error);
     }
   };
 
   useEffect(() => {
-    if (user && selectedProperty?._id) {
-      fetchBookingsByProperty(selectedProperty._id);
+    if (user && selectedProperty.length > 3) {
+      fetchBookingsByProperty(selectedProperty);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedProperty]);
@@ -178,91 +169,31 @@ const AllBooking: FC<Props> = () => {
       <ContainerColumn>
         <ContainerBetween>
           <Heading>All Booking</Heading>
-          <Link to={"add"}>
-            <Button className="active:scale-95 bg-purple-700">
-              + add booking
-            </Button>
-          </Link>
+          <div className="flex justify-end flex-1 items-end gap-5">
+            <Select
+              items={userProperties || []}
+              label="Select Property to view rooms"
+              labelPlacement="outside"
+              placeholder="Select Property"
+              variant="bordered"
+              selectedKeys={[selectedProperty]}
+              onChange={handleSelectionChange}
+              className="max-w-[15rem]"
+            >
+              {(property) => (
+                <SelectItem key={property._id?.toString() || ""}>
+                  {property.name}
+                </SelectItem>
+              )}
+            </Select>
+            <Link to={"add"}>
+              <Button className="active:scale-95 bg-purple-700">
+                + add booking
+              </Button>
+            </Link>
+          </div>
         </ContainerBetween>
-        <Heading variant="subtitle">
-          Search or select a property to view bookings
-        </Heading>
-        {/* <div className="rounded-lg grid grid-cols-4 gap-5"> */}
-        <div className="w-full">
-          <Input
-            type="text"
-            // label="Search Properties"
-            // labelPlacement="outside"
-            value={search}
-            onValueChange={setSearch}
-            onChange={handleFilterProperty}
-            variant="bordered"
-            size="sm"
-            radius="md"
-            placeholder="Search properties"
-          />
-        </div>
-        <Swiper
-          modules={[Navigation, Pagination, Scrollbar, A11y]}
-          spaceBetween={-20}
-          slidesPerView={4}
-          navigation
-          className="w-full swiper-class"
-          wrapperClass="px-6"
-          // pagination={{ clickable: true }}
-          // scrollbar={{ draggable: true }}
-          onSwiper={(swiper) => console.log(swiper)}
-          onSlideChange={() => console.log("slide change")}
-        >
-          {filteredProperties?.map((property) => {
-            return (
-              <SwiperSlide className="p-5">
-                <div
-                  onClick={() => setSelectedProperty(property)}
-                  className={cn(
-                    "py-4 px-5 bg-zinc-100 rounded-md duration-150 ring-zinc-100 hover:ring-2 hover:bg-white cursor-pointer",
-                    selectedProperty?._id === property._id && "ring-4 bg-white"
-                  )}
-                >
-                  <h3 className="text-base font-semibold">{property.name}</h3>
-                  <p className="text-xs text-zinc-600">{property.location}</p>
-                </div>
-              </SwiperSlide>
-            );
-          })}
-          {filteredProperties?.map((property) => {
-            return (
-              <SwiperSlide className="p-5">
-                <div
-                  onClick={() => setSelectedProperty(property)}
-                  className={cn(
-                    "py-4 px-5 bg-zinc-100 rounded-md duration-150 ring-zinc-100 hover:ring-2 hover:bg-white cursor-pointer",
-                    selectedProperty?._id === property._id && "ring-4 bg-white"
-                  )}
-                >
-                  <h3 className="text-base font-semibold">{property.name}</h3>
-                  <p className="text-xs text-zinc-600">{property.location}</p>
-                </div>
-              </SwiperSlide>
-            );
-          })}
-          {filteredProperties?.map((property) => {
-            return (
-              <SwiperSlide className="p-5">
-                <div
-                  onClick={() => setSelectedProperty(property)}
-                  className={cn(
-                    "py-4 px-5 bg-zinc-100 rounded-md duration-150 ring-zinc-100 hover:ring-2 hover:bg-white cursor-pointer",
-                    selectedProperty?._id === property._id && "ring-4 bg-white"
-                  )}
-                >
-                  <h3 className="text-base font-semibold">{property.name}</h3>
-                  <p className="text-xs text-zinc-600">{property.location}</p>
-                </div>
-              </SwiperSlide>
-            );
-          })}
-        </Swiper>
+
         {/* </div> */}
       </ContainerColumn>
 
@@ -306,7 +237,7 @@ const AllBooking: FC<Props> = () => {
                     classNames={{
                       input: "pl-2.5",
                     }}
-                    onChange={handleSearch}
+                    onChange={handleCurrentBookings}
                   />
                   <Table>
                     <TableHeader>

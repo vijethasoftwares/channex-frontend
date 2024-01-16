@@ -22,11 +22,13 @@ import Users from "./pages/dashboard/users.tsx";
 import ErrorPage from "./pages/error/index.tsx";
 import AddProperty from "./pages/property/add.tsx";
 import AllProperties from "./pages/property/all.tsx";
+import EditProperty from "./pages/property/edit.tsx";
 import PropertyById from "./pages/property/id.tsx";
 import AddReview from "./pages/reviews/add.tsx";
 import AllReviews from "./pages/reviews/all.tsx";
 import AddRoom from "./pages/rooms/add.tsx";
 import AllRooms from "./pages/rooms/all.tsx";
+import EditRoom from "./pages/rooms/edit.tsx";
 
 const router = createBrowserRouter([
   {
@@ -78,6 +80,10 @@ const router = createBrowserRouter([
             path: ":id",
             element: <PropertyById />,
           },
+          {
+            path: "edit/:id",
+            element: <EditProperty />,
+          },
         ],
       },
       {
@@ -90,6 +96,10 @@ const router = createBrowserRouter([
           {
             path: "add",
             element: <AddRoom />,
+          },
+          {
+            path: "edit/:id",
+            element: <EditRoom />,
           },
         ],
       },

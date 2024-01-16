@@ -24,7 +24,7 @@ const AllRooms: FC<Props> = () => {
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isPropertyLoading, setIsPropertyLoading] = useState<boolean>(false);
-  const [rooms, setRooms] = useState<RoomProps[]>();
+  const [rooms, setRooms] = useState<RoomProps[]>([]);
   const [filteredRooms, setFilteredRooms] = useState<RoomProps[]>();
   const [userProperties, setUserProperties] = useState<PropertyProps[]>();
   const [selectedProperty, setSelectedProperty] = useState<string>("");
@@ -150,6 +150,13 @@ const AllRooms: FC<Props> = () => {
             <Loader2 className="w-10 h-10 animate-spin text-black" />
           </div>
         )}
+        {selectedProperty && !isLoading && rooms.length === 0 && (
+          <div className="px-5 py-10 flex justify-center items-center">
+            <Heading variant="subtitle">
+              No rooms found for this property
+            </Heading>
+          </div>
+        )}
         <AnimatePresence>
           {" "}
           <motion.div
@@ -159,7 +166,13 @@ const AllRooms: FC<Props> = () => {
             {filteredRooms &&
               selectedProperty &&
               filteredRooms.map((room) => {
-                return <RoomCard data={room} />;
+                return (
+                  <RoomCard
+                    id={selectedProperty}
+                    fetchData={fetchRoomsByProperty}
+                    data={room}
+                  />
+                );
               })}
           </motion.div>
         </AnimatePresence>

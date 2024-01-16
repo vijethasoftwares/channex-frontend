@@ -38,9 +38,9 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, X } from "lucide-react";
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   DaysEnum,
   MealNameEnum,
@@ -101,8 +101,9 @@ const GOOGLE_API_KEY = import.meta.env.VITE_MAP_API_KEY as string;
 
 const storage = getStorage(firebase_app);
 
-const AddProperty: FC<Props> = () => {
+const EditProperty: FC<Props> = () => {
   const { user } = useGlobalContext() as GlobalContextType;
+  const { id } = useParams();
   const [location, setLocation] = useState<string>("");
   const [coordinate, setCoordinate] = useState({
     lat: 0,
@@ -180,11 +181,6 @@ const AddProperty: FC<Props> = () => {
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
-    isOpen: isOpenDocuments,
-    onOpen: onOpenDocuments,
-    onOpenChange: onOpenChangeDocuments,
-  } = useDisclosure();
-  const {
     isOpen: isOpenFoodMenu,
     onOpen: onOpenFoodMenu,
     onOpenChange: onOpenChangeFoodMenu,
@@ -259,7 +255,6 @@ const AddProperty: FC<Props> = () => {
         Array.from(e.target.files) as File[]
       );
       setImages([...images, ...imagesLinks]);
-      // setImages([...images, ...Array.from(e.target.files)]);
     } else {
       toast.error("You can only upload 5 images");
     }
@@ -272,14 +267,11 @@ const AddProperty: FC<Props> = () => {
   };
 
   const handleSubmit: () => Promise<void> = async () => {
-    // const img = await convertImagesToBase64(images);
     setSubmitting(true);
     const np = Array.from(nearbyPlaces) as string[];
     const p = Array.from(permissions) as string[];
     const f = Array.from(facilities) as string[];
     const ipsa = Array.from(isParkingSpaceAvailable) as string[];
-    // console.log(coordinate);
-    // const imagesLinks = await uploadImagesToFirebase(images);
     const property: PropertyProps = {
       name: name,
       type: Array.from(propertyType).toString(),
@@ -306,18 +298,6 @@ const AddProperty: FC<Props> = () => {
     console.log(property);
 
     try {
-      const res: AxiosResponse = await axios.post(
-        SERVER_URL + "/owner/create-properties",
-        property,
-        {
-          headers: {
-            Authorization: "Bearer " + user.token,
-          },
-        }
-      );
-      const data = await res.data;
-      console.log(data, "data");
-      toast.success(data.message || "Property added successfully");
       navigate("/property");
     } catch (error) {
       const err = error as AxiosError & { response: AxiosResponse };
@@ -460,6 +440,48 @@ const AddProperty: FC<Props> = () => {
     setNonVegMealItemsArray([]);
     onOpenChangeFoodMenu();
   };
+
+  useEffect(() => {
+    if (id && user?.userId) {
+      const fetchProperty = async () => {
+        try {
+          const res = await axios.get(
+            SERVER_URL + `/owner/get-property-by-id/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${user?.token}`,
+              },
+            }
+          );
+          const data = await res.data?.property;
+          console.log(data);
+          setName(data.name);
+          setPropertyType(new Set([data.type]));
+          setPermissions(new Set(data.permissions));
+          setIsParkingSpaceAvailable(new Set([data.isParkingSpaceAvailable]));
+          setFacilities(new Set(data.facilities));
+          setCoupleFriendly(data.isCoupleFriendly);
+          setLocation(data.location);
+          setNearbyPlaces(new Set(data.nearbyPlaces));
+          setImages(data.images);
+          setFoodMenu(data.foodMenu);
+          setManagerId(data.managerId);
+          setManagerName(data.manager?.name || "");
+          setManagerEmail(data.manager?.email || "");
+          setManagerPhoneNumber(data.manager?.phoneNumber || "");
+          setCoordinate({
+            lat: data.coOfLocation.coordinates[0],
+            lng: data.coOfLocation.coordinates[1],
+          });
+        } catch (error) {
+          console.error(error);
+          toast.error("Error fetching property");
+        }
+      };
+      fetchProperty();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, id]);
 
   return (
     <>
@@ -739,7 +761,7 @@ const AddProperty: FC<Props> = () => {
                           <div className=" flex flex-col *:flex-1 *:p-4 w-full">
                             <div className="border-b">
                               <span className="block">
-                                {day.meals.map(
+                                {day?.meals.map(
                                   (meal, mealIndex) =>
                                     meal["name"] === MealNameEnum[1] &&
                                     meal.vegMealItems.length > 0 && (
@@ -798,7 +820,7 @@ const AddProperty: FC<Props> = () => {
                         <TableCell className="border-r">
                           <div className="flex flex-col *:flex-1 w-full">
                             <span className="block">
-                              {day.meals.map((meal, mealIndex) => {
+                              {day?.meals.map((meal, mealIndex) => {
                                 //check if there is a meal name snack
                                 //and if there are any meal items
                                 //if there are no meal items, then show N/P
@@ -823,10 +845,10 @@ const AddProperty: FC<Props> = () => {
                                   );
                                 }
                               })}
-                              {day.meals.length < 2 && "N/P"}
+                              {day?.meals.length < 2 && "N/P"}
                             </span>
                             <span className="mt-2 flex gap-1">
-                              {day?.meals.map((meal) => {
+                              {day?.meals?.map((meal) => {
                                 if (
                                   meal["name"] === MealNameEnum[2] &&
                                   meal.vegMealItems.length > 0
@@ -855,7 +877,7 @@ const AddProperty: FC<Props> = () => {
                           <div className=" flex flex-col *:flex-1 *:p-4 w-full">
                             <div className="border-b">
                               <span className="block">
-                                {day.meals.map(
+                                {day?.meals.map(
                                   (meal, mealIndex) =>
                                     meal["name"] === MealNameEnum[3] &&
                                     meal.vegMealItems.length > 0 && (
@@ -883,7 +905,7 @@ const AddProperty: FC<Props> = () => {
                             </div>
                             <div>
                               <span className="block">
-                                {day.meals.map(
+                                {day?.meals.map(
                                   (meal, mealIndex) =>
                                     meal["name"] === MealNameEnum[3] &&
                                     meal.nonVegMealItems.length > 0 && (
@@ -943,42 +965,43 @@ const AddProperty: FC<Props> = () => {
                 className="relative w-full grid grid-cols-5 gap-3"
               >
                 <AnimatePresence>
-                  {images.map((image, index) => (
-                    <AnimatePresence key={image.label}>
-                      <motion.div
-                        layout
-                        initial={{
-                          opacity: 0,
-                          scale: 0.5,
-                          x: 100,
-                        }}
-                        animate={{
-                          opacity: 1,
-                          scale: 1,
-                          x: 0,
-                        }}
-                        transition={{
-                          duration: 0.5,
-                          ease: [0.87, 0, 0.13, 1],
-                          delay: index * 0.1,
-                        }}
-                        className="relative p-2.5 rounded-md bg-zinc-100 border-2 border-dashed origin-right"
-                      >
-                        <img
-                          key={index}
-                          src={image.url}
-                          alt={`Uploaded ${index}`}
-                          className="min-h-20 w-full object-cover h-full rounded-md"
-                        />
-                        <div
-                          className="absolute top-1 right-1 cursor-pointer p-1 bg-white border rounded-3xl z-10"
-                          onClick={() => handleImageDelete(index)}
+                  {images &&
+                    images?.map((image, index) => (
+                      <AnimatePresence key={image.label}>
+                        <motion.div
+                          layout
+                          initial={{
+                            opacity: 0,
+                            scale: 0.5,
+                            x: 100,
+                          }}
+                          animate={{
+                            opacity: 1,
+                            scale: 1,
+                            x: 0,
+                          }}
+                          transition={{
+                            duration: 0.5,
+                            ease: [0.87, 0, 0.13, 1],
+                            delay: index * 0.1,
+                          }}
+                          className="relative p-2.5 rounded-md bg-zinc-100 border-2 border-dashed origin-right"
                         >
-                          <X size={20} className="text-black" />
-                        </div>
-                      </motion.div>
-                    </AnimatePresence>
-                  ))}
+                          <img
+                            key={index}
+                            src={image.url}
+                            alt={`Uploaded ${index}`}
+                            className="min-h-20 w-full object-cover h-full rounded-md"
+                          />
+                          <div
+                            className="absolute top-1 right-1 cursor-pointer p-1 bg-white border rounded-3xl z-10"
+                            onClick={() => handleImageDelete(index)}
+                          >
+                            <X size={20} className="text-black" />
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
+                    ))}
                 </AnimatePresence>
               </motion.div>
             </div>
@@ -999,13 +1022,6 @@ const AddProperty: FC<Props> = () => {
               Cancel
             </Button>
             <Button
-              onClick={onOpenDocuments}
-              variant="outline"
-              className=" active:scale-95"
-            >
-              Add Documents
-            </Button>
-            <Button
               onClick={onOpen}
               variant="outline"
               className=" active:scale-95"
@@ -1022,66 +1038,6 @@ const AddProperty: FC<Props> = () => {
           </div>
         </ContainerColumn>
       </Container>
-
-      <Modal
-        backdrop="blur"
-        isOpen={isOpenDocuments}
-        onOpenChange={onOpenChangeDocuments}
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Add Documents
-              </ModalHeader>
-              <ModalBody>
-                <Input
-                  autoFocus
-                  label="Name"
-                  labelPlacement="outside"
-                  placeholder="Enter manager name"
-                  variant="bordered"
-                  size="lg"
-                  radius="md"
-                  // value={managerName}
-                  // onValueChange={setManagerName}
-                  isRequired
-                />
-                <Input
-                  autoFocus
-                  label="Email"
-                  labelPlacement="outside"
-                  placeholder="Enter manager email"
-                  variant="bordered"
-                  size="lg"
-                  radius="md"
-                  // value={managerEmail}
-                  // onValueChange={setManagerEmail}
-                  isRequired
-                />
-                <Input
-                  autoFocus
-                  type="number"
-                  label="Phone Number"
-                  labelPlacement="outside"
-                  placeholder="Enter manager phone number"
-                  variant="bordered"
-                  size="lg"
-                  radius="md"
-                  // value={managerPhoneNumber}
-                  // onValueChange={setManagerPhoneNumber}
-                />
-              </ModalBody>
-              <ModalFooter>
-                <Button className="px-8" variant="ghost" onClick={onClose}>
-                  Close
-                </Button>
-                <Button className="px-8">Add</Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
       <Modal backdrop="blur" isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           {(onClose) => (
@@ -1279,4 +1235,4 @@ const AddProperty: FC<Props> = () => {
     </>
   );
 };
-export default AddProperty;
+export default EditProperty;

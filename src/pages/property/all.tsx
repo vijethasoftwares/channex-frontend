@@ -91,7 +91,13 @@ const AllProperties: FC<Props> = () => {
 
           {filteredProperties.length > 0 &&
             filteredProperties.map((property, i) => {
-              return <PropertyCard key={i} data={property} />;
+              return (
+                <PropertyCard
+                  fetchData={fetchProperties}
+                  key={i}
+                  data={property}
+                />
+              );
             })}
           {filteredProperties.length === 0 && !loading && (
             <Heading variant="caption">No properties found</Heading>

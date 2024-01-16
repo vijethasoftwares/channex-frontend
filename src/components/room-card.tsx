@@ -1,3 +1,11 @@
+import { SERVER_URL, useGlobalContext } from "@/lib/utils";
+import {
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@nextui-org/react";
+import axios, { AxiosError } from "axios";
 import { motion } from "framer-motion";
 import {
   ArrowDownToLine,
@@ -8,23 +16,56 @@ import {
   User2,
 } from "lucide-react";
 import React, { FC } from "react";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import Heading from "./heading";
+import { GlobalContextType } from "./providers";
 import { RoomProps } from "./types/app";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
 
 type Props = {
   children?: React.ReactNode;
   data: RoomProps;
+  id: string;
+  fetchData: (propertyId: string) => void;
 };
 
-const RoomCard: FC<Props> = ({ data }) => {
+const RoomCard: FC<Props> = ({ data, id, fetchData }) => {
+  const { user } = useGlobalContext() as GlobalContextType;
+  const navigate = useNavigate();
+
+  const handleDeleteRoom = async (
+    e: React.MouseEvent<HTMLLIElement, MouseEvent>
+  ) => {
+    e.preventDefault();
+    if (!user.token) return toast.error("Error deleting room");
+    try {
+      toast.loading("Deleting room...");
+      const res = await axios.delete(
+        SERVER_URL + `/manager/delete-room/${data._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
+        }
+      );
+      const d = await res.data;
+      console.log(d);
+      toast.dismiss();
+      toast.success("Room deleted successfully");
+      fetchData(id);
+    } catch (error) {
+      toast.dismiss();
+      console.error(error);
+      const err = error as AxiosError & {
+        response: { data: { message: string } };
+      };
+      toast.error(err.response.data?.message || "Error deleting room");
+    }
+  };
+
   return (
     <motion.div
       layout="position"
@@ -57,23 +98,38 @@ const RoomCard: FC<Props> = ({ data }) => {
         </div>
       </div>
       <div className="absolute right-5 top-5 flex justify-end z-[99]">
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <MoreVertical className="w-5 h-5" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="-translate-x-20 translate-y-3">
-            <DropdownMenuItem>
-              <Pencil className="w-4 h-4 mr-2" /> Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-rose-50 hover:text-rose-600">
-              <Trash className="w-4 h-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <ArrowDownToLine className="w-4 h-4 mr-2" /> Download Report
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Dropdown classNames={{ base: "mr-10" }}>
+          <DropdownTrigger>
+            <Button
+              variant={"ghost"}
+              className="w-auto h-auto px-2 rounded-3xl"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu aria-label="Static Actions">
+            <DropdownItem
+              onClick={() => navigate("edit/" + data._id?.toString() || "")}
+              key="edit"
+            >
+              <Pencil className="inline-block w-4 h-4 mr-2" />
+              Edit
+            </DropdownItem>
+            <DropdownItem
+              onClick={handleDeleteRoom}
+              key="delete"
+              className="text-danger"
+              color="danger"
+            >
+              <Trash className="inline-block w-4 h-4 mr-2" />
+              Delete file
+            </DropdownItem>
+            <DropdownItem key="download">
+              <ArrowDownToLine className="inline-block w-4 h-4 mr-1" /> Download
+              Report
+            </DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
       </div>
       <div className="w-full p-3 flex-1">
         <div className="w-full h-full flex flex-col justify-between items-start">
