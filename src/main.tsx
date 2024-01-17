@@ -10,7 +10,7 @@ import Login from "./pages/auth/login.tsx";
 import AddBooking from "./pages/bookings/add.tsx";
 import AllBooking from "./pages/bookings/all.tsx";
 import CheckIn from "./pages/bookings/check-in.tsx";
-import CheckOut from "./pages/bookings/check-out.tsx";
+import EditBooking from "./pages/bookings/edit.tsx";
 import AddComplaints from "./pages/complaints/add.tsx";
 import AllComplaints from "./pages/complaints/all.tsx";
 import Analytics from "./pages/dashboard/analytics.tsx";
@@ -119,8 +119,8 @@ const router = createBrowserRouter([
             element: <CheckIn />,
           },
           {
-            path: "check-out/:id",
-            element: <CheckOut />,
+            path: "edit/:id",
+            element: <EditBooking />,
           },
         ],
       },

@@ -531,6 +531,7 @@ const BookingActionUpcoming: FC<BookingActionProps> = (booking) => {
       <Button
         className="px-4 rounded-2xl hover:bg-zinc-300 active:scale-95 gap-1.5"
         variant={"secondary"}
+        onClick={() => navigate("edit/" + booking._id)}
       >
         <Eye className="w-4 h-4" /> Edit
       </Button>

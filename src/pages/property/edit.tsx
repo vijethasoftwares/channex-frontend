@@ -37,10 +37,10 @@ import {
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, X } from "lucide-react";
+import { Loader2, Pencil, X } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   DaysEnum,
   MealNameEnum,
@@ -59,6 +59,7 @@ type Permission = {
 };
 
 interface PropertyProps {
+  _id?: string;
   name: string;
   type: string;
   location: string;
@@ -75,8 +76,8 @@ interface PropertyProps {
   facilities?: string[];
   isParkingSpaceAvailable?: boolean | "true" | "false" | string;
   isCoupleFriendly?: boolean;
-  foodMenu?: FoodMenuProps[];
-  managerId?: string;
+  foodMenu: FoodMenuProps[];
+  managerId: string;
 }
 
 interface FoodMenuProps {
@@ -104,6 +105,7 @@ const storage = getStorage(firebase_app);
 const EditProperty: FC<Props> = () => {
   const { user } = useGlobalContext() as GlobalContextType;
   const { id } = useParams();
+  const [propertyData, setPropertyData] = useState<PropertyProps>();
   const [location, setLocation] = useState<string>("");
   const [coordinate, setCoordinate] = useState({
     lat: 0,
@@ -186,8 +188,6 @@ const EditProperty: FC<Props> = () => {
     onOpenChange: onOpenChangeFoodMenu,
   } = useDisclosure();
 
-  const navigate = useNavigate();
-
   const handleLocationInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLocation(event.target.value);
   };
@@ -268,6 +268,10 @@ const EditProperty: FC<Props> = () => {
 
   const handleSubmit: () => Promise<void> = async () => {
     setSubmitting(true);
+    if (!propertyData?._id) {
+      toast.error("Property ID not found");
+      return;
+    }
     const np = Array.from(nearbyPlaces) as string[];
     const p = Array.from(permissions) as string[];
     const f = Array.from(facilities) as string[];
@@ -298,7 +302,18 @@ const EditProperty: FC<Props> = () => {
     console.log(property);
 
     try {
-      navigate("/property");
+      const res: AxiosResponse = await axios.patch(
+        SERVER_URL + "/owner/update-property/" + propertyData._id,
+        property,
+        {
+          headers: {
+            Authorization: "Bearer " + user.token,
+          },
+        }
+      );
+      const data = await res.data;
+      console.log(data, "data");
+      toast.success(data.message || "Property updated successfully");
     } catch (error) {
       const err = error as AxiosError & { response: AxiosResponse };
       console.log(err.response);
@@ -373,8 +388,6 @@ const EditProperty: FC<Props> = () => {
   const handleAddMeal = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const dayString = Array.from(day).toString();
-    const vmi = Array.from(vegMealItemsArray);
-    const nvmi = Array.from(nonVegMealItemsArray);
     const mn = Array.from(mealName).toString();
     if (dayString.length == 0) {
       toast.error("Day cannot be empty");
@@ -382,10 +395,6 @@ const EditProperty: FC<Props> = () => {
     }
     if (mn.length == 0) {
       toast.error("Meal name cannot be empty");
-      return;
-    }
-    if (vmi.length == 0 && nvmi.length == 0) {
-      toast.error("Meal items cannot be empty");
       return;
     }
 
@@ -400,8 +409,8 @@ const EditProperty: FC<Props> = () => {
         // Meal already exists in the meals array, update it
         const updatedMeal = {
           ...foodDay.meals[mealIndex],
-          vegMealItems: vmi,
-          nonVegMealItems: nvmi,
+          vegMealItems: vegMealItemsArray,
+          nonVegMealItems: nonVegMealItemsArray,
           hasMealItems: true,
         };
         const updatedMeals = [...foodDay.meals];
@@ -420,8 +429,8 @@ const EditProperty: FC<Props> = () => {
             {
               name: mn,
               hasMealItems: true,
-              vegMealItems: vmi,
-              nonVegMealItems: nvmi,
+              vegMealItems: vegMealItemsArray,
+              nonVegMealItems: nonVegMealItemsArray,
             },
           ],
         };
@@ -455,14 +464,18 @@ const EditProperty: FC<Props> = () => {
           );
           const data = await res.data?.property;
           console.log(data);
+
           setName(data.name);
           setPropertyType(new Set([data.type]));
           setPermissions(new Set(data.permissions));
-          setIsParkingSpaceAvailable(new Set([data.isParkingSpaceAvailable]));
+          setIsParkingSpaceAvailable(
+            new Set([data.isParkingSpaceAvailable?.toString()])
+          );
           setFacilities(new Set(data.facilities));
           setCoupleFriendly(data.isCoupleFriendly);
           setLocation(data.location);
           setNearbyPlaces(new Set(data.nearbyPlaces));
+          setNearbyPlacesData(data.nearbyPlaces);
           setImages(data.images);
           setFoodMenu(data.foodMenu);
           setManagerId(data.managerId);
@@ -473,6 +486,7 @@ const EditProperty: FC<Props> = () => {
             lat: data.coOfLocation.coordinates[0],
             lng: data.coOfLocation.coordinates[1],
           });
+          setPropertyData(data);
         } catch (error) {
           console.error(error);
           toast.error("Error fetching property");
@@ -482,6 +496,24 @@ const EditProperty: FC<Props> = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, id]);
+
+  const handleUpdateMeal = (e: React.MouseEvent<HTMLSpanElement>) => {
+    const day = e.currentTarget.dataset.day;
+    const meal = e.currentTarget.dataset.meal;
+    const dayIndex = foodMenu.findIndex((d) => d.day === day);
+    if (dayIndex !== -1) {
+      const foodDay = foodMenu[dayIndex];
+      const mealIndex = foodDay.meals.findIndex((m) => m.name === meal);
+      if (mealIndex !== -1) {
+        const meal = foodDay.meals[mealIndex];
+        setMealName(new Set([meal.name]));
+        setVegMealItemsArray([]);
+        setNonVegMealItemsArray([]);
+        setDay(new Set([foodDay.day]));
+        onOpenChangeFoodMenu();
+      }
+    }
+  };
 
   return (
     <>
@@ -703,13 +735,16 @@ const EditProperty: FC<Props> = () => {
                               <span className="block">
                                 {day.meals.map(
                                   (meal, mealIndex) =>
-                                    meal["name"] === MealNameEnum[0] &&
-                                    meal.vegMealItems.length > 0 && (
+                                    meal["name"] === MealNameEnum[0] && (
                                       <span
-                                        className="font-semibold"
+                                        className="font-semibold cursor-pointer"
                                         key={mealIndex}
+                                        data-day={day.day}
+                                        data-meal={meal.name}
+                                        onClick={handleUpdateMeal}
                                       >
-                                        Veg
+                                        Veg{" "}
+                                        <Pencil className="w-3 h-3 ml-1 inline-block" />
                                       </span>
                                     )
                                 )}
@@ -731,13 +766,16 @@ const EditProperty: FC<Props> = () => {
                               <span className="block">
                                 {day.meals.map(
                                   (meal, mealIndex) =>
-                                    meal["name"] === MealNameEnum[0] &&
-                                    meal.nonVegMealItems.length > 0 && (
+                                    meal["name"] === MealNameEnum[0] && (
                                       <span
-                                        className="font-semibold"
+                                        className="font-semibold cursor-pointer"
                                         key={mealIndex}
+                                        data-day={day.day}
+                                        data-meal={meal.name}
+                                        onClick={handleUpdateMeal}
                                       >
                                         Non-Veg
+                                        <Pencil className="w-3 h-3 ml-1 inline-block" />
                                       </span>
                                     )
                                 )}
@@ -763,13 +801,16 @@ const EditProperty: FC<Props> = () => {
                               <span className="block">
                                 {day?.meals.map(
                                   (meal, mealIndex) =>
-                                    meal["name"] === MealNameEnum[1] &&
-                                    meal.vegMealItems.length > 0 && (
+                                    meal["name"] === MealNameEnum[1] && (
                                       <span
-                                        className="font-semibold"
+                                        className="font-semibold cursor-pointer"
                                         key={mealIndex}
+                                        data-day={day.day}
+                                        data-meal={meal.name}
+                                        onClick={handleUpdateMeal}
                                       >
                                         Veg
+                                        <Pencil className="w-3 h-3 ml-1 inline-block" />
                                       </span>
                                     )
                                 )}
@@ -791,13 +832,16 @@ const EditProperty: FC<Props> = () => {
                               <span className="block">
                                 {day.meals.map(
                                   (meal, mealIndex) =>
-                                    meal["name"] === MealNameEnum[1] &&
-                                    meal.nonVegMealItems.length > 0 && (
+                                    meal["name"] === MealNameEnum[1] && (
                                       <span
-                                        className="font-semibold"
+                                        className="font-semibold cursor-pointer"
                                         key={mealIndex}
+                                        data-day={day.day}
+                                        data-meal={meal.name}
+                                        onClick={handleUpdateMeal}
                                       >
                                         Non-Veg
+                                        <Pencil className="w-3 h-3 ml-1 inline-block" />
                                       </span>
                                     )
                                 )}
@@ -824,23 +868,17 @@ const EditProperty: FC<Props> = () => {
                                 //check if there is a meal name snack
                                 //and if there are any meal items
                                 //if there are no meal items, then show N/P
-                                if (
-                                  meal["name"] === MealNameEnum[2] &&
-                                  meal.hasMealItems == false
-                                ) {
-                                  return "N/P";
-                                }
-                                if (
-                                  meal["name"] === MealNameEnum[2] &&
-                                  (meal.vegMealItems.length > 0 ||
-                                    meal.nonVegMealItems.length > 0)
-                                ) {
+                                if (meal["name"] === MealNameEnum[2]) {
                                   return (
                                     <span
-                                      className="font-semibold"
+                                      className="font-semibold cursor-pointer"
                                       key={mealIndex}
+                                      data-day={day.day}
+                                      data-meal={meal.name}
+                                      onClick={handleUpdateMeal}
                                     >
-                                      snack items
+                                      snack items{" "}
+                                      <Pencil className="w-3 h-3 ml-1 inline-block" />
                                     </span>
                                   );
                                 }
@@ -879,13 +917,16 @@ const EditProperty: FC<Props> = () => {
                               <span className="block">
                                 {day?.meals.map(
                                   (meal, mealIndex) =>
-                                    meal["name"] === MealNameEnum[3] &&
-                                    meal.vegMealItems.length > 0 && (
+                                    meal["name"] === MealNameEnum[3] && (
                                       <span
-                                        className="font-semibold"
+                                        className="font-semibold cursor-pointer"
                                         key={mealIndex}
+                                        data-day={day.day}
+                                        data-meal={meal.name}
+                                        onClick={handleUpdateMeal}
                                       >
-                                        Veg
+                                        Veg{" "}
+                                        <Pencil className="w-3 h-3 ml-1 inline-block" />
                                       </span>
                                     )
                                 )}
@@ -907,13 +948,16 @@ const EditProperty: FC<Props> = () => {
                               <span className="block">
                                 {day?.meals.map(
                                   (meal, mealIndex) =>
-                                    meal["name"] === MealNameEnum[3] &&
-                                    meal.nonVegMealItems.length > 0 && (
+                                    meal["name"] === MealNameEnum[3] && (
                                       <span
-                                        className="font-semibold"
+                                        className="font-semibold cursor-pointer"
                                         key={mealIndex}
+                                        data-day={day.day}
+                                        data-meal={meal.name}
+                                        onClick={handleUpdateMeal}
                                       >
-                                        Non-Veg
+                                        Non-Veg{" "}
+                                        <Pencil className="w-3 h-3 ml-1 inline-block" />
                                       </span>
                                     )
                                 )}
@@ -1026,14 +1070,14 @@ const EditProperty: FC<Props> = () => {
               variant="outline"
               className=" active:scale-95"
             >
-              Add Manager
+              Update Manager
             </Button>
             <Button
               onClick={handleSubmit}
               isLoading={submitting}
               className="bg-purple-700 active:scale-95"
             >
-              Add Property
+              Update Property
             </Button>
           </div>
         </ContainerColumn>
@@ -1093,7 +1137,7 @@ const EditProperty: FC<Props> = () => {
                     handleAddManager();
                   }}
                 >
-                  Add
+                  Add Manager
                 </Button>
               </ModalFooter>
             </>
@@ -1225,7 +1269,7 @@ const EditProperty: FC<Props> = () => {
                   Close
                 </Button>
                 <Button className="px-8" onClick={handleAddMeal}>
-                  Add
+                  Add {mealName || "Meal"}
                 </Button>
               </ModalFooter>
             </>
