@@ -86,6 +86,7 @@ interface FoodMenuProps {
 }
 
 interface MealData {
+  timing?: string;
   name: string;
   hasMealItems?: boolean;
   vegMealItems: string[];
