@@ -87,7 +87,7 @@ const EditBooking: FC<Props> = () => {
   const [bookingStatus, setBookingStatus] = useState<Selection>(new Set([]));
   const [paymentMethod, setPaymentMethod] = useState<Selection>(new Set([]));
   const [paymentAmount, setPaymentAmount] = useState<string | undefined>();
-  const [primaryGuestName, setPrimaryGuestName] = useState<string>();
+  const [guestName, setGuestName] = useState<string>();
   const [guestPhoneNumber, setGuestPhoneNumber] = useState<
     string | undefined
   >();
@@ -130,7 +130,7 @@ const EditBooking: FC<Props> = () => {
       !noOfGuests ||
       !Array.from(bookingType).toString() ||
       !Array.from(bookingStatus).toString() ||
-      !primaryGuestName ||
+      !guestName ||
       !guestPhoneNumber
     ) {
       toast.error("Please fill all the fields");
@@ -150,27 +150,26 @@ const EditBooking: FC<Props> = () => {
       bookingType: Array.from(bookingType).toString(),
       bookingStatus: Array.from(bookingStatus).toString(),
       paymentMethod: Array.from(paymentMethod).toString(),
-      primaryGuestName: primaryGuestName || "",
+      guestName: guestName || "",
       guestPhoneNumber: parseInt(guestPhoneNumber || "0"),
       guestEmail: guestEmail || "",
       userId: user.userId,
     };
     console.log(resObj);
-    return;
+    // return;
     try {
-      //   const res = await axios.post(
-      //     SERVER_URL + "/user/create-booking",
-      //     resObj,
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer ${user?.token}`,
-      //       },
-      //     }
-      //   );
-      //   const data = await res.data;
-      //   console.log(data);
-      //   toast.success(data.message ?? "Booking created successfully");
-      //   navigate("/bookings");
+      const res = await axios.patch(
+        SERVER_URL + "/manager/update-booking/" + id,
+        resObj,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
+        }
+      );
+      const data = await res.data;
+      console.log(data);
+      toast.success(data.message ?? "booking updated successfully");
     } catch (error) {
       const err = error as AxiosError & {
         response: { data: { message: string } };
@@ -205,7 +204,7 @@ const EditBooking: FC<Props> = () => {
         setBookingType(new Set([data.booking.bookingType]));
         setBookingStatus(new Set([data.booking.bookingStatus]));
         setPaymentMethod(new Set([data.booking.paymentMethod]));
-        setPrimaryGuestName(data.booking.primaryGuestName);
+        setGuestName(data.booking.guestName);
         setGuestPhoneNumber(data.booking.guestPhoneNumber.toString());
         setGuestEmail(data.booking.guestEmail);
       } catch (error) {
@@ -502,14 +501,14 @@ const EditBooking: FC<Props> = () => {
         <div className="mt-5 grid grid-cols-3 gap-5 w-full">
           <Input
             type="text"
-            name="primaryGuestName"
+            name="guestName"
             label="Primary Guest Name"
             labelPlacement="outside"
             placeholder="Enter Primary Guest Name"
             color="default"
             isRequired={true}
-            value={primaryGuestName}
-            onValueChange={setPrimaryGuestName}
+            value={guestName}
+            onValueChange={setGuestName}
             radius="md"
             size="lg"
             variant="bordered"
