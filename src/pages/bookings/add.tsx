@@ -146,7 +146,7 @@ const AddBooking: FC<Props> = () => {
       from: date?.from,
       to: date?.to,
       paymentStatus: Array.from(paymentStatus).toString(),
-      numberOfGuest: parseInt(noOfGuests || "0"),
+      numberOfGuests: parseInt(noOfGuests || "0"),
       paymentAmount: parseInt(paymentAmount || "0"),
       bookingType: Array.from(bookingType).toString(),
       bookingStatus: Array.from(bookingStatus).toString(),

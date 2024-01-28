@@ -68,7 +68,7 @@ export interface BookingProps {
   to: Date;
   checkIn: object;
   paymentStatus: string;
-  numberOfGuest: number;
+  numberOfGuests: number;
   paymentAmount: number;
   roomAssigned?: string;
   isCheckedIn?: boolean;
