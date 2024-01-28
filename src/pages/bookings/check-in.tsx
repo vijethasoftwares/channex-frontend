@@ -180,7 +180,7 @@ const CheckIn: FC<Props> = () => {
         setRooms(data.rooms);
         setCheckInDate(new Date(data.booking.from));
         setCheckOutDate(new Date(data.booking.to));
-        setNoOfGuests(data.booking.numberOfGuest.toString());
+        setNoOfGuests(data.booking.numberOfGuests.toString());
         setRoomCategory(new Set([data.booking.roomCategory]));
         setRoomType(new Set([data.booking.roomType]));
         setPrimaryGuest({

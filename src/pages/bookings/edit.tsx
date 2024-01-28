@@ -145,7 +145,7 @@ const EditBooking: FC<Props> = () => {
       from: date?.from,
       to: date?.to,
       paymentStatus: Array.from(paymentStatus).toString(),
-      numberOfGuest: parseInt(noOfGuests || "0"),
+      numberOfGuests: parseInt(noOfGuests || "0"),
       paymentAmount: parseInt(paymentAmount || "0"),
       bookingType: Array.from(bookingType).toString(),
       bookingStatus: Array.from(bookingStatus).toString(),
@@ -199,7 +199,7 @@ const EditBooking: FC<Props> = () => {
           to: new Date(data.booking.to),
         });
         setPaymentStatus(new Set([data.booking.paymentStatus]));
-        setNoOfGuests(data.booking.numberOfGuest.toString());
+        setNoOfGuests(data.booking.numberOfGuests.toString());
         setPaymentAmount(data.booking.paymentAmount.toString());
         setBookingType(new Set([data.booking.bookingType]));
         setBookingStatus(new Set([data.booking.bookingStatus]));
