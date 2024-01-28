@@ -33,7 +33,11 @@ const NavbarComp: FC<Props> = () => {
       setIsLoading(true);
       try {
         axios
-          .get(`${SERVER_URL}/auth/getuser/${user?.userId}`)
+          .get(`${SERVER_URL}/user/load-user`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          })
           .then((response) => {
             const { data } = response;
             setUser({ ...user, ...data.user });
@@ -52,7 +56,7 @@ const NavbarComp: FC<Props> = () => {
     };
     if (user?.userId) fetchUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.userId]);
+  }, [user?.token]);
   console.log(user);
 
   const userInitials = user?.role ? user?.role.split(" ").map((n) => n[0]) : "";

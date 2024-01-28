@@ -52,6 +52,7 @@ interface PropertyProps {
   };
   permissions?: string[];
   facilities?: string[];
+  propertyType?: string;
   isParkingSpaceAvailable?: boolean | "true" | "false" | string;
   isCoupleFriendly?: boolean;
   foodMenu?: FoodMenuProps[];
@@ -225,9 +226,9 @@ const AddRoom: FC<Props> = () => {
       !roomSize ||
       !maxOccupancy ||
       !roomDescription ||
-      !images.roomImage ||
-      !images.washroomImage ||
-      !images.bedImage
+      images.roomImage.length === 0 ||
+      images.washroomImage.length === 0 ||
+      images.bedImage.length === 0
     ) {
       toast.error("Please fill all the fields");
       return;
@@ -248,6 +249,7 @@ const AddRoom: FC<Props> = () => {
       vacancy: mo - guestDetails.length,
       roomDescription,
       propertyId: p,
+      propertyType: selectedProperty?.type,
       guestDetails,
       roomPricePerDay: parseInt(roomPricePerDay || "0"),
       images,
@@ -288,8 +290,8 @@ const AddRoom: FC<Props> = () => {
         console.error(error);
       }
     };
-    fetchUserProperties();
-  }, []);
+    if (user?.token) fetchUserProperties();
+  }, [user]);
 
   useEffect(() => {
     if (Array.from(roomType).toString() === RoomTypeEnum[0]) {
