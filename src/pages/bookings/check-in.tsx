@@ -113,9 +113,10 @@ const CheckIn: FC<Props> = () => {
       !primaryGuest.guest.name ||
       !primaryGuest.guest.email ||
       !primaryGuest.guest.phone ||
-      !primaryGuest.guest.dob ||
-      !primaryGuest.guest.idProofFrontImage?.url ||
-      !primaryGuest.guest.idProofBackImage?.url
+      !primaryGuest.guest.dob
+      // ||
+      // !primaryGuest.guest.idProofFrontImage?.url ||
+      // !primaryGuest.guest.idProofBackImage?.url
     ) {
       toast.error("Please fill primary guest details");
       return;
@@ -392,7 +393,7 @@ const CheckIn: FC<Props> = () => {
                   {primaryGuest?.guest?.email &&
                   primaryGuest?.guest?.phone &&
                   primaryGuest?.guest?.dob ? (
-                    <div className="p-5 rounded-lg bg-zinc-50 grid grid-cols-2 gap-y-3">
+                    <div className="p-5 rounded-lg border grid grid-cols-2 gap-y-3">
                       <div className="col-span-2 flex flex-col justify-start items-start">
                         <span className="text-xs font-semibold text-zinc-500">
                           Room Assigned
@@ -441,7 +442,7 @@ const CheckIn: FC<Props> = () => {
                     additionalGuests.map((guest, index) => {
                       return (
                         <div
-                          className="p-5 rounded-lg bg-zinc-50 grid grid-cols-2 gap-y-3"
+                          className="p-5 rounded-lg border grid grid-cols-2 gap-y-3"
                           key={index + (guest.roomNumber || 0)}
                         >
                           <div className="col-span-2 flex flex-col justify-start items-start">
@@ -494,50 +495,20 @@ const CheckIn: FC<Props> = () => {
 
             {Array.from(assignRoom).length > 0 && (
               <Tabs aria-label="Dynamic tabs" classNames={{ tab: "px-10" }}>
-                {Array.from(assignRoom).map((item) => {
+                {Array.from(assignRoom).map((item, i) => {
                   const room = rooms?.find((room) => room.roomNumber == item);
                   return room ? (
                     <Tab
                       key={item}
-                      title={`Room ${room.roomNumber} (vacancy: ${room.vacancy})`}
+                      title={`Room ${room.roomNumber} (Max Occupancy: ${room.vacancy})`}
                       className="w-full"
                     >
                       <Card className="p-2.5">
                         <CardBody>
-                          {room?.vacancy > 1 ? (
-                            <div className="flex flex-col gap-2 w-full">
-                              {primaryGuest?.guest?.email &&
-                              primaryGuest?.guest?.phone &&
-                              primaryGuest?.guest?.dob ? null : ( //   ?.url // primaryGuest?.guest?.idProofBackImage // primaryGuest?.guest?.idProofFrontImage?.url && // &&
-                                <>
-                                  <Heading variant="subheading">
-                                    Primary Guest
-                                  </Heading>
-                                  <PrimaryGuestForm
-                                    primaryGuest={primaryGuest}
-                                    setPrimaryGuest={setPrimaryGuest}
-                                    roomNumber={room.roomNumber}
-                                    vacancy={room.vacancy}
-                                    noOfGuests={parseInt(noOfGuests || "0")}
-                                    propertyId={booking?.propertyId}
-                                  />
-                                </>
-                              )}
-                              <Heading variant="subheading">
-                                Additional Guests
-                              </Heading>
-                              <GuestForm
-                                additionalGuests={additionalGuests}
-                                setAdditionalGuests={setAdditionalGuests}
-                                roomNumber={room.roomNumber}
-                                vacancy={room.vacancy}
-                                noOfGuests={parseInt(noOfGuests || "0")}
-                                propertyId={booking?.propertyId}
-                                primaryGuest={primaryGuest}
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex flex-col gap-2">
+                          {(primaryGuest.roomNumber === room.roomNumber ||
+                            i === 0) && (
+                            <>
+                              {" "}
                               <Heading variant="subheading">
                                 Primary Guest
                               </Heading>
@@ -549,8 +520,42 @@ const CheckIn: FC<Props> = () => {
                                 noOfGuests={parseInt(noOfGuests || "0")}
                                 propertyId={booking?.propertyId}
                               />
-                            </div>
+                            </>
                           )}
+                          {i === 0 &&
+                            additionalGuests.length + 1 < room.maxOccupancy && (
+                              <div className="flex flex-col gap-2 w-full">
+                                <Heading variant="subheading">
+                                  Additional Guests
+                                </Heading>
+                                <GuestForm
+                                  additionalGuests={additionalGuests}
+                                  setAdditionalGuests={setAdditionalGuests}
+                                  roomNumber={room.roomNumber}
+                                  vacancy={room.vacancy}
+                                  noOfGuests={parseInt(noOfGuests || "0")}
+                                  propertyId={booking?.propertyId}
+                                  primaryGuest={primaryGuest}
+                                />
+                              </div>
+                            )}
+                          {room?.maxOccupancy >= additionalGuests.length &&
+                            i > 0 && (
+                              <div className="flex flex-col gap-2 w-full">
+                                <Heading variant="subheading">
+                                  Additional Guests
+                                </Heading>
+                                <GuestForm
+                                  additionalGuests={additionalGuests}
+                                  setAdditionalGuests={setAdditionalGuests}
+                                  roomNumber={room.roomNumber}
+                                  vacancy={room.vacancy}
+                                  noOfGuests={parseInt(noOfGuests || "0")}
+                                  propertyId={booking?.propertyId}
+                                  primaryGuest={primaryGuest}
+                                />
+                              </div>
+                            )}
                         </CardBody>
                       </Card>
                     </Tab>
@@ -637,9 +642,10 @@ const PrimaryGuestForm: React.FC<PrimaryGuestFormProps> = ({
       guest.name === "" ||
       guest.email === "" ||
       guest.phone === "" ||
-      guest.dob === "" ||
-      guest.idProofFrontImage?.url === "" ||
-      guest.idProofBackImage?.url === ""
+      guest.dob === ""
+      // ||
+      // guest.idProofFrontImage?.url === "" ||
+      // guest.idProofBackImage?.url === ""
     ) {
       toast.error("Please fill all the fields");
       return;
@@ -661,18 +667,20 @@ const PrimaryGuestForm: React.FC<PrimaryGuestFormProps> = ({
       return;
     }
     console.log(files, "files");
+    const toastLoadingId = toast.loading("Uploading image...");
     try {
       const upload = await uploadImagesToFirebase(Array.from(files || []));
-      toast.success("Image uploaded successfully");
       setGuest({
         ...guest,
         [name]: upload[0],
       });
       console.log(upload);
-      // toast.success("Image uploaded successfully");
+      toast.success("Image uploaded successfully");
     } catch (error) {
       console.log(error);
       toast.error("Error uploading image");
+    } finally {
+      toast.dismiss(toastLoadingId);
     }
   };
 
@@ -680,7 +688,16 @@ const PrimaryGuestForm: React.FC<PrimaryGuestFormProps> = ({
     e.preventDefault();
     const { name, value } = e.target;
     const d = new Date(value);
-    console.log(d);
+    if (d.toString() === "Invalid Date" || d > new Date()) {
+      toast.error("Please enter a valid date");
+      return;
+    }
+    //age validation 18
+    if (dayjs().diff(d, "year") < 18) {
+      toast.error("Guest must be 18 years or older");
+      return;
+    }
+
     setGuest({ ...guest, [name]: d });
   };
 
@@ -766,7 +783,7 @@ const PrimaryGuestForm: React.FC<PrimaryGuestFormProps> = ({
           <input
             type="file"
             name="idProofFrontImage"
-            required
+            // required
             accept="image/*"
             onChange={handleUploadImage}
             className="w-full h-full absolute top-0 right-0 bottom-0 left-0 opacity-0 cursor-pointer z-10"
@@ -786,7 +803,7 @@ const PrimaryGuestForm: React.FC<PrimaryGuestFormProps> = ({
           <input
             type="file"
             name="idProofBackImage"
-            required
+            // required
             accept="image/*"
             onChange={handleUploadImage}
             className="w-full h-full absolute top-0 right-0 bottom-0 left-0 opacity-0 cursor-pointer z-10"
@@ -847,9 +864,10 @@ const GuestForm: React.FC<GuestFormProps> = ({
       guest.name === "" ||
       guest.email === "" ||
       guest.phone === "" ||
-      guest.dob === "" ||
-      guest.idProofFrontImage?.url === "" ||
-      guest.idProofBackImage?.url === ""
+      guest.dob === ""
+      // ||
+      // guest.idProofFrontImage?.url === "" ||
+      // guest.idProofBackImage?.url === ""
     ) {
       toast.error("Please fill all the fields");
       return;
@@ -897,18 +915,20 @@ const GuestForm: React.FC<GuestFormProps> = ({
       toast.error("No files selected");
       return;
     }
+    const toastLoadingId = toast.loading("Uploading image...");
     try {
       const upload = await uploadImagesToFirebase(Array.from(files || []));
-      toast.success("Image uploaded successfully");
       setGuest({
         ...guest,
         [name]: upload[0],
       });
       console.log(upload);
-      // toast.success("Image uploaded successfully");
+      toast.success("Image uploaded successfully");
     } catch (error) {
       console.log(error);
       toast.error("Error uploading image");
+    } finally {
+      toast.dismiss(toastLoadingId);
     }
   };
 
@@ -993,7 +1013,7 @@ const GuestForm: React.FC<GuestFormProps> = ({
           <input
             type="file"
             name="idProofFrontImage"
-            required
+            // required
             accept="image/*"
             onChange={handleUploadImage}
             className="w-full h-full absolute top-0 right-0 bottom-0 left-0 opacity-0 cursor-pointer z-10"
@@ -1013,7 +1033,7 @@ const GuestForm: React.FC<GuestFormProps> = ({
           <input
             type="file"
             name="idProofBackImage"
-            required
+            // required
             accept="image/*"
             onChange={handleUploadImage}
             className="w-full h-full absolute top-0 right-0 bottom-0 left-0 opacity-0 cursor-pointer z-10"
