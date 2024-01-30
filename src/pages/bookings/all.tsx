@@ -270,7 +270,7 @@ const AllBooking: FC<Props> = () => {
                           return (
                             <TableRow key={booking?._id}>
                               <TableCell>{booking?.guestName}</TableCell>
-                              <TableCell>{booking?.numberOfGuest}</TableCell>
+                              <TableCell>{booking?.numberOfGuests}</TableCell>
                               <TableCell>{booking?.bookingType}</TableCell>
                               <TableCell>
                                 {dayjs(booking?.from).format("DD/MM/YYYY")}
@@ -360,7 +360,7 @@ const AllBooking: FC<Props> = () => {
                           return (
                             <TableRow key={booking?._id}>
                               <TableCell>{booking?.guestName}</TableCell>
-                              <TableCell>{booking?.numberOfGuest}</TableCell>
+                              <TableCell>{booking?.numberOfGuests}</TableCell>
                               <TableCell>{booking?.bookingType}</TableCell>
                               <TableCell>
                                 {dayjs(booking?.from).format("DD/MM/YYYY")}
@@ -448,7 +448,7 @@ const AllBooking: FC<Props> = () => {
                           return (
                             <TableRow key={booking?._id}>
                               <TableCell>{booking?.guestName}</TableCell>
-                              <TableCell>{booking?.numberOfGuest}</TableCell>
+                              <TableCell>{booking?.numberOfGuests}</TableCell>
                               <TableCell>
                                 {dayjs(booking?.from).format("DD/MM/YYYY")}
                               </TableCell>
