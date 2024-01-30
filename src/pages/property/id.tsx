@@ -51,36 +51,35 @@ const PropertyById: FC<Props> = () => {
 
   const [foodMenu, setFoodMenu] = useState<FoodMenuProps[]>();
   console.log(foodMenu);
-
+  const fetchProperty = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get(
+        SERVER_URL + "/owner/get-property-by-id/" + id
+      );
+      const data = (await res.data) as AxiosResponse & {
+        property: PropertyProps;
+        message: string;
+      };
+      console.log(data);
+      setProperty(data.property);
+      setCoordinate({
+        lat: data.property.coOfLocation.coordinates[0],
+        lng: data.property.coOfLocation.coordinates[1],
+      });
+      toast.success(data.message || "property fetched successfully");
+      setFoodMenu(data.property.foodMenu);
+    } catch (error) {
+      console.log(error);
+      const err = error as AxiosError & {
+        response: { data: { message: string } };
+      };
+      toast.error(err.response.data?.message || "failed to fetch property");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchProperty = async () => {
-      setIsLoading(true);
-      try {
-        const res = await axios.get(
-          SERVER_URL + "/owner/get-property-by-id/" + id
-        );
-        const data = (await res.data) as AxiosResponse & {
-          property: PropertyProps;
-          message: string;
-        };
-        console.log(data);
-        setProperty(data.property);
-        setCoordinate({
-          lat: data.property.coOfLocation.coordinates[0],
-          lng: data.property.coOfLocation.coordinates[1],
-        });
-        toast.success(data.message || "property fetched successfully");
-        setFoodMenu(data.property.foodMenu);
-      } catch (error) {
-        console.log(error);
-        const err = error as AxiosError & {
-          response: { data: { message: string } };
-        };
-        toast.error(err.response.data?.message || "failed to fetch property");
-      } finally {
-        setIsLoading(false);
-      }
-    };
     if (id) fetchProperty();
   }, [id]);
   useEffect(() => {
@@ -583,7 +582,14 @@ const PropertyById: FC<Props> = () => {
                 <div className="flex flex-col justify-start items-start gap-2.5">
                   {rooms &&
                     rooms?.map((room, i) => {
-                      return <RoomCard key={i} data={room} />;
+                      return (
+                        <RoomCard
+                          fetchData={fetchProperty}
+                          id={room._id as string}
+                          key={i}
+                          data={room}
+                        />
+                      );
                     })}
                 </div>
               </Tab>
