@@ -61,8 +61,10 @@ type Permission = {
 interface PropertyProps {
   name: string;
   type: string;
-  location: string;
+  // location: string;
   address: string;
+  city?: string;
+  state?: string;
   coOfLocation: { type: "Point"; coordinates: [number, number] };
   nearbyPlaces?: string[];
   images: { label: string; url: string }[];
@@ -108,6 +110,10 @@ const AddProperty: FC<Props> = () => {
     lat: 0,
     lng: 0,
   });
+  const [, setLandmark] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+
   const [nearbyPlacesData, setNearbyPlacesData] = useState([]);
   const [nearbyPlaces, setNearbyPlaces] = useState<Selection>(new Set([]));
   const [fetchingNearbyPlaces, setFetchingNearbyPlaces] =
@@ -196,6 +202,50 @@ const AddProperty: FC<Props> = () => {
     setLocation(event.target.value);
   };
 
+  const fetchLocation = async () => {
+    setFetchingLocation(true);
+    try {
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: location }, (results, status) => {
+        console.log(results, status, "results", "status");
+
+        if (status === "OK") {
+          if (results) {
+            if (results[0].geometry.location) {
+              setCoordinate({
+                lat: results[0].geometry.location.lat(),
+                lng: results[0].geometry.location.lng(),
+              });
+            }
+            setLocation(results[0].formatted_address);
+            results[0].address_components.forEach((component) => {
+              switch (component.types[0]) {
+                case "locality": // city
+                  setCity(component.long_name);
+                  break;
+                case "administrative_area_level_1": // state
+                  setState(component.long_name);
+                  break;
+                case "point_of_interest": // landmark
+                case "establishment":
+                case "natural_feature":
+                  setLandmark(component.long_name);
+                  break;
+              }
+            });
+          }
+        } else {
+          toast.error("Geocode was not successful for the following reason: ");
+        }
+      });
+    } catch (error) {
+      console.log(error);
+      toast.error("An error occurred while fetching location");
+    } finally {
+      setFetchingLocation(false);
+    }
+  };
+
   const handleGetLiveLocation = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       const { latitude, longitude } = position.coords;
@@ -216,6 +266,27 @@ const AddProperty: FC<Props> = () => {
       const data = await response.json();
       if (data.results && data.results.length > 0) {
         setLocation(data.results[0].formatted_address);
+
+        data.results[0].address_components.forEach(
+          (component: {
+            types: unknown[];
+            long_name: React.SetStateAction<string>;
+          }) => {
+            switch (component.types[0]) {
+              case "locality": // city
+                setCity(component.long_name);
+                break;
+              case "administrative_area_level_1": // state
+                setState(component.long_name);
+                break;
+              case "point_of_interest": // landmark
+              case "establishment":
+              case "natural_feature":
+                setLandmark(component.long_name);
+                break;
+            }
+          }
+        );
       }
       setFetchingLocation(false);
     });
@@ -283,8 +354,9 @@ const AddProperty: FC<Props> = () => {
     const property: PropertyProps = {
       name: name,
       type: Array.from(propertyType).toString(),
-      location: location,
       address: location,
+      city: city,
+      state: state,
       coOfLocation: {
         type: "Point",
         coordinates: [coordinate.lat, coordinate.lng],
@@ -539,7 +611,7 @@ const AddProperty: FC<Props> = () => {
                   No
                 </SelectItem>
               </Select>
-              <div className="w-full flex justify-center items-end flex-col gap-2 relative">
+              <div className="relative flex flex-col items-center *:w-full">
                 <Input
                   type="text"
                   name="location"
@@ -562,12 +634,47 @@ const AddProperty: FC<Props> = () => {
                         className="text-xs h-auto bg-white hover:bg-zinc-50 -mr-1 cursor-pointer px-3 py-2 rounded-md border border-gray-300 text-nowrap font-medium"
                         onClick={handleGetLiveLocation}
                       >
-                        Get Location
+                        live location
                       </span>
                     )
                   }
                 />
+                <div className="absolute -top-2 right-0 flex justify-end items-center">
+                  <Badge
+                    onClick={fetchLocation}
+                    variant="default"
+                    className="mr-1 py-1 cursor-pointer"
+                  >
+                    fetch location
+                  </Badge>
+                </div>
               </div>
+              <Input
+                type="text"
+                name="city"
+                label="City"
+                labelPlacement="outside"
+                placeholder="Enter city"
+                color="default"
+                radius="md"
+                size="lg"
+                variant="bordered"
+                value={city}
+                onValueChange={setCity}
+              />
+              <Input
+                type="text"
+                name="state"
+                label="State"
+                labelPlacement="outside"
+                placeholder="Enter state"
+                color="default"
+                radius="md"
+                size="lg"
+                variant="bordered"
+                value={state}
+                onValueChange={setState}
+              />
               <Select
                 label="Nearby Places"
                 labelPlacement="outside"

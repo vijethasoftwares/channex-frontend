@@ -58,7 +58,7 @@ const PropertyCard: FC<Props> = ({ data, fetchData }) => {
   };
 
   return (
-    <div className="relative w-full flex flex-col lg:flex-row items-stretch justify-start p-2.5 border rounded-xl gap-2.5">
+    <div className="relative w-full flex flex-col lg:flex-row items-stretch justify-start p-2.5 border rounded-2xl gap-2.5">
       <div className="w-full lg:w-2/6 flex flex-col">
         <div className="w-full bg-zinc-50 rounded-md flex">
           <Avatar className="w-full h-48 rounded-xl">
@@ -102,14 +102,34 @@ const PropertyCard: FC<Props> = ({ data, fetchData }) => {
             </Link>
 
             {/* <Heading variant="body">{data.description}</Heading> */}
-            <Heading variant="caption">{data.address}</Heading>
+            <Heading variant="caption" className="gap-2.5 flex items-center">
+              {data.isCoupleFriendly ? (
+                <Badge
+                  variant="default"
+                  className="bg-green-500 hover:bg-green-600"
+                >
+                  Couple Friendly
+                </Badge>
+              ) : (
+                <Badge variant="destructive">Not Couple Friendly</Badge>
+              )}
+              {data.isParkingSpaceAvailable ? (
+                <Badge
+                  variant="default"
+                  className="bg-green-500 hover:bg-green-600"
+                >
+                  Parking Space Available
+                </Badge>
+              ) : (
+                <Badge variant="destructive">Parking Space Not Available</Badge>
+              )}
+            </Heading>
           </div>
           <div className="flex flex-col gap-2.5">
             <div className="flex justify-start items-start gap-2.5 flex-wrap"></div>
-            <div className="flex justify-start items-start gap-2.5 flex-wrap">
-              <Badge className="py-1.5" variant={"outline"}>
-                Location: {data.location}
-              </Badge>
+            <div className="flex justify-start flex-col items-start gap-2.5 flex-wrap text-sm font-medium max-w-md">
+              <span className="font-semibold">Location:</span>{" "}
+              <span className="text-zinc-500">{data.location}</span>
             </div>
           </div>
         </div>

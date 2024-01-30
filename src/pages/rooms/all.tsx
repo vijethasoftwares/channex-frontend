@@ -136,14 +136,12 @@ const AllRooms: FC<Props> = () => {
             });
             setFilteredRooms(filtered);
           }}
-          className="mb-5"
-          classNames={{
-            inputWrapper: "shadow-none border-1",
-          }}
-          variant="bordered"
-          size="sm"
-          radius="md"
+          className="mb-2.5"
           placeholder="Search rooms"
+          classNames={{
+            inputWrapper: "rounded-xl border shadow-none pl-5",
+            base: "font-medium text-black",
+          }}
         />
         {isLoading && (
           <div className="flex justify-center items-center px-5 py-10 w-full">

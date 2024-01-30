@@ -83,10 +83,12 @@ const AllProperties: FC<Props> = () => {
           <Input
             type="text"
             onChange={handleSearch}
-            variant="bordered"
-            size="sm"
-            radius="md"
+            // variant="bordered"
             placeholder="Search properties"
+            classNames={{
+              inputWrapper: "rounded-xl border shadow-none pl-5",
+              base: "font-medium text-black",
+            }}
           />
 
           {filteredProperties.length > 0 &&

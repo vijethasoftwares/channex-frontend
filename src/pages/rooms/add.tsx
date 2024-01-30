@@ -30,7 +30,7 @@ import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { CalendarIcon, Info } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 type Props = {
   children?: React.ReactNode;
@@ -156,7 +156,7 @@ const AddRoom: FC<Props> = () => {
     ""
   );
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     if (userProperties) {
@@ -255,8 +255,8 @@ const AddRoom: FC<Props> = () => {
       images,
       roomFacilities: rf,
     };
+    const addToast = toast.loading("Adding Room...");
     try {
-      toast.loading("Adding Room...");
       const res = await axios.post(SERVER_URL + "/manager/create-room", obj, {
         headers: {
           Authorization: `Bearer ${user?.token}`,
@@ -264,14 +264,15 @@ const AddRoom: FC<Props> = () => {
       });
       const data = await res.data();
       console.log(data);
-      navigate("/rooms");
+
+      toast.success("Room added successfully");
+      // navigate("/rooms");
     } catch (error) {
       const err = error as AxiosError & { response: AxiosResponse };
       console.error(err);
       toast.error(err.response.data?.message || "Something went wrong!");
     } finally {
-      toast.dismiss();
-      toast.success("Room Added Successfully!");
+      toast.dismiss(addToast);
     }
   };
 
@@ -313,6 +314,7 @@ const AddRoom: FC<Props> = () => {
         <div className="mt-5 grid grid-cols-3 gap-5 w-full">
           <Input
             type="number"
+            onWheel={(e) => e.currentTarget.blur()}
             name="roomNumber"
             label="Room No"
             labelPlacement="outside"
@@ -415,6 +417,7 @@ const AddRoom: FC<Props> = () => {
           </Select>
           <Input
             type="number"
+            onWheel={(e) => e.currentTarget.blur()}
             name="roomSize"
             label="Room Size (per Sqft)"
             labelPlacement="outside"
@@ -429,6 +432,7 @@ const AddRoom: FC<Props> = () => {
           />
           <Input
             type="number"
+            onWheel={(e) => e.currentTarget.blur()}
             name="roomPricePerMonth"
             label="Room Price (per month)"
             labelPlacement="outside"
@@ -449,6 +453,7 @@ const AddRoom: FC<Props> = () => {
           />
           <Input
             type="number"
+            onWheel={(e) => e.currentTarget.blur()}
             name="roomPricePerDay"
             label="Room Price (per day)"
             labelPlacement="outside"
@@ -469,6 +474,7 @@ const AddRoom: FC<Props> = () => {
           <div className="flex items-center gap-2.5">
             <Input
               type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               name="maxOccupancy"
               label="Max Occupancy"
               labelPlacement="outside"
@@ -567,6 +573,7 @@ const AddRoom: FC<Props> = () => {
 
             <Input
               type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               name="guestName"
               label="Guest Phone Number"
               labelPlacement="outside"

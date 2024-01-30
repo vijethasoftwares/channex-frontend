@@ -329,6 +329,7 @@ const EditRoom: FC<Props> = () => {
         <div className="mt-5 grid grid-cols-3 gap-5 w-full">
           <Input
             type="number"
+            onWheel={(e) => e.currentTarget.blur()}
             name="roomNumber"
             label="Room No"
             labelPlacement="outside"
@@ -431,6 +432,7 @@ const EditRoom: FC<Props> = () => {
           </Select>
           <Input
             type="number"
+            onWheel={(e) => e.currentTarget.blur()}
             name="roomSize"
             label="Room Size (per Sqft)"
             labelPlacement="outside"
@@ -445,6 +447,7 @@ const EditRoom: FC<Props> = () => {
           />
           <Input
             type="number"
+            onWheel={(e) => e.currentTarget.blur()}
             name="roomPricePerMonth"
             label="Room Price (per month)"
             labelPlacement="outside"
@@ -465,6 +468,7 @@ const EditRoom: FC<Props> = () => {
           />
           <Input
             type="number"
+            onWheel={(e) => e.currentTarget.blur()}
             name="roomPricePerDay"
             label="Room Price (per day)"
             labelPlacement="outside"
@@ -485,6 +489,7 @@ const EditRoom: FC<Props> = () => {
           <div className="flex items-center gap-2.5">
             <Input
               type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               name="maxOccupancy"
               label="Max Occupancy"
               labelPlacement="outside"
@@ -583,6 +588,7 @@ const EditRoom: FC<Props> = () => {
 
             <Input
               type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               name="guestName"
               label="Guest Phone Number"
               labelPlacement="outside"
