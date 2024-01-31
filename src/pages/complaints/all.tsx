@@ -81,7 +81,7 @@ const AllComplaints: FC<Props> = () => {
                     variant="subtitle"
                     className="w-full flex justify-center py-5"
                   >
-                    No upcoming bookings found
+                    No Complaints Found
                   </Heading>
                 </TableCell>
               </TableRow>
