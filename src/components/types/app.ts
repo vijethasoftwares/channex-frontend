@@ -1,3 +1,5 @@
+import { ObjectId } from "mongodb";
+
 export interface UserProps {
   role: "Admin" | "Owner" | "Manager" | "User";
   token: string;
@@ -107,4 +109,21 @@ interface ImagesProps {
   washroomImage: { label: string; url: string }[];
   bedImage: { label: string; url: string }[];
   additionalImages: { label: string; url: string }[];
+}
+
+export interface ComplaintProps {
+  _id?: ObjectId;
+  owner_user_id?: ObjectId;
+  propertyId: string;
+  bookingId?: string;
+  userId: string;
+  userName: string;
+  userPhoneNumber: number;
+  userEmailAddress?: string;
+  complaintType: string;
+  complaintDetails: string;
+  complaintStatus: string;
+  complaintRemarks?: string;
+  isResolved?: boolean;
+  createdAt?: Date;
 }
