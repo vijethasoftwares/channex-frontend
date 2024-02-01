@@ -113,9 +113,10 @@ interface ImagesProps {
 
 export interface ComplaintProps {
   _id?: ObjectId;
-  owner_user_id?: ObjectId;
-  propertyId: string;
-  bookingId?: string;
+  owner_user_id: ObjectId;
+  propertyId: ObjectId;
+  propertyName: string;
+  bookingId: ObjectId;
   userId: string;
   userName: string;
   userPhoneNumber: number;
@@ -125,5 +126,21 @@ export interface ComplaintProps {
   complaintStatus: string;
   complaintRemarks?: string;
   isResolved?: boolean;
+  createdAt?: Date;
+}
+
+export interface ReviewProps {
+  _id?: ObjectId;
+  owner_user_id: ObjectId;
+  propertyId: ObjectId;
+  propertyName: string;
+  bookingId: ObjectId;
+  userId: string;
+  userName: string;
+  userPhoneNumber: number;
+  userEmailAddress?: string;
+  avatar?: string;
+  rating: number;
+  review: string;
   createdAt?: Date;
 }

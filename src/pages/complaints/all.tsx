@@ -4,7 +4,6 @@ import ContainerColumn from "@/components/container-column";
 import Heading from "@/components/heading";
 import { ComplaintProps } from "@/components/types/app";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -59,13 +58,14 @@ const AllComplaints: FC<Props> = () => {
       <ContainerColumn>
         <ContainerBetween>
           <Heading>All Complaints</Heading>
-          <Button className="active:scale-95 bg-purple-700">
+          {/* <Button className="active:scale-95 bg-purple-700">
             + Add Compalint
-          </Button>
+          </Button> */}
         </ContainerBetween>
         <Table>
           <TableHeader>
             <TableRow>
+              <TableCell>Property Name</TableCell>
               <TableCell>Complaint Type</TableCell>
               <TableCell>Complaint Details</TableCell>
               <TableCell>Date</TableCell>
@@ -90,6 +90,7 @@ const AllComplaints: FC<Props> = () => {
               complaints.map((complaint) => {
                 return (
                   <TableRow key={complaint?._id?.toString()}>
+                    <TableCell>{complaint?.propertyName}</TableCell>
                     <TableCell>{complaint?.complaintType}</TableCell>
                     <TableCell>{complaint?.complaintDetails}</TableCell>
                     <TableCell>
