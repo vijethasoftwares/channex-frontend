@@ -139,7 +139,7 @@ export interface ReviewProps {
   userName: string;
   userPhoneNumber: number;
   userEmailAddress?: string;
-  avatar?: string;
+  profilePicture?: string;
   rating: number;
   review: string;
   createdAt?: Date;

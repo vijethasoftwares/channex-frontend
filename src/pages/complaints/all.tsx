@@ -41,6 +41,64 @@ const AllComplaints: FC<Props> = () => {
       setLoading(false);
     }
   };
+
+  const handleAcknowledge = async (id: string) => {
+    try {
+      const res = await axios.post(
+        SERVER_URL + "/owner/acknowledge-complaint",
+        {
+          complaintId: id,
+        },
+        {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        }
+      );
+      const data = res.data;
+      toast.success(data.message);
+      fetchComplaints();
+    } catch (error) {
+      toast.error((error as Error)?.message || "An error occurred");
+    }
+  };
+
+  const handleInProgress = async (id: string) => {
+    try {
+      const res = await axios.post(
+        SERVER_URL + "/owner/in-progress-complaint",
+        {
+          complaintId: id,
+        },
+        {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        }
+      );
+      const data = res.data;
+      toast.success(data.message);
+      fetchComplaints();
+    } catch (error) {
+      toast.error((error as Error)?.message || "An error occurred");
+    }
+  };
+
+  const handleResolve = async (id: string) => {
+    try {
+      const res = await axios.post(
+        SERVER_URL + "/owner/resolve-complaint",
+        {
+          complaintId: id,
+        },
+        {
+          headers: { Authorization: `Bearer ${user?.token}` },
+        }
+      );
+      const data = res.data;
+      toast.success(data.message);
+      fetchComplaints();
+    } catch (error) {
+      toast.error((error as Error)?.message || "An error occurred");
+    }
+  };
+
   useEffect(() => {
     if (user?.userId) fetchComplaints();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,6 +128,7 @@ const AllComplaints: FC<Props> = () => {
               <TableCell>Complaint Details</TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Complaint By</TableCell>
+              <TableCell>Status</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHeader>
@@ -98,11 +157,33 @@ const AllComplaints: FC<Props> = () => {
                     </TableCell>
                     <TableCell>{complaint?.userName}</TableCell>
                     <TableCell>
-                      {complaint.isResolved ? (
-                        <Badge color="success">Resolved</Badge>
-                      ) : (
-                        <Badge color="error">Pending</Badge>
-                      )}
+                      <Badge>{complaint?.complaintStatus}</Badge>
+                    </TableCell>
+                    <TableCell className="flex items-center gap-2.5 w-full">
+                      <button
+                        className="text-xs text-white bg-rose-500 px-3 py-2 rounded-lg text-nowrap"
+                        onClick={() =>
+                          handleAcknowledge(complaint._id?.toString() as string)
+                        }
+                      >
+                        Acknowledge
+                      </button>
+                      <button
+                        className="text-xs text-white bg-blue-500 px-3 py-2 rounded-lg text-nowrap"
+                        onClick={() =>
+                          handleInProgress(complaint._id?.toString() as string)
+                        }
+                      >
+                        In Progress
+                      </button>
+                      <button
+                        className="text-xs text-white bg-green-500 px-3 py-2 rounded-lg text-nowrap"
+                        onClick={() =>
+                          handleResolve(complaint._id?.toString() as string)
+                        }
+                      >
+                        Resolve
+                      </button>
                     </TableCell>
                   </TableRow>
                 );

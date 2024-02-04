@@ -1,12 +1,11 @@
-import Heading from "@/components/heading";
 import MapComponent from "@/components/map-component";
 import { GlobalContextType } from "@/components/providers";
 import RoomCard from "@/components/room-card";
 import {
-  BookingProps,
+  ComplaintProps,
   FoodMenuProps,
-  GuestDetailsProps,
   PropertyProps,
+  ReviewProps,
   RoomProps,
 } from "@/components/types/app";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,16 +18,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SERVER_URL, groupBy, useGlobalContext } from "@/lib/utils";
+import { SERVER_URL, cn, groupBy, useGlobalContext } from "@/lib/utils";
 import { Card, CardBody, Spinner, Tab, Tabs } from "@nextui-org/react";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import dayjs from "dayjs";
-import { ChevronLeft } from "lucide-react";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { ChevronLeft, Star } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useParams } from "react-router-dom";
 import { MealNameEnum } from "./consts";
 
+dayjs.extend(relativeTime);
 type Props = {
   children?: React.ReactNode;
 };
@@ -39,10 +40,12 @@ const PropertyById: FC<Props> = () => {
   const { user } = useGlobalContext() as GlobalContextType;
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [property, setProperty] = useState<PropertyProps>();
+  const [reviews, setReviews] = useState<ReviewProps[]>();
+  const [complaints, setComplaints] = useState<ComplaintProps[]>();
   const [rooms, setRooms] = useState<RoomProps[]>();
-  const [guestsByRoom, setGuestsByRoom] = useState<
-    Map<number, { roomNumber: number; guest: GuestDetailsProps }[]>
-  >(new Map());
+  // const [guestsByRoom, setGuestsByRoom] = useState<
+  //   Map<number, { roomNumber: number; guest: GuestDetailsProps }[]>
+  // >(new Map());
   const [coordinate, setCoordinate] = useState<{ lat: number; lng: number }>({
     lat: 0,
     lng: 0,
@@ -59,10 +62,14 @@ const PropertyById: FC<Props> = () => {
       );
       const data = (await res.data) as AxiosResponse & {
         property: PropertyProps;
+        reviews: ReviewProps[];
+        complaints: ComplaintProps[];
         message: string;
       };
       console.log(data);
-      setProperty(data.property);
+      setProperty(data?.property);
+      setReviews(data?.reviews);
+      setComplaints(data?.complaints);
       setCoordinate({
         lat: data.property.coOfLocation.coordinates[0],
         lng: data.property.coOfLocation.coordinates[1],
@@ -81,6 +88,7 @@ const PropertyById: FC<Props> = () => {
   };
   useEffect(() => {
     if (id) fetchProperty();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
   useEffect(() => {
     if (rooms && rooms.length > 0) {
@@ -114,27 +122,27 @@ const PropertyById: FC<Props> = () => {
         };
         console.log(data);
         setRooms(data.rooms);
-        const res2 = await axios.get(
-          SERVER_URL + "/manager/getAllBookings/" + id,
-          {
-            headers: {
-              Authorization: `Bearer ${user?.token}`,
-            },
-          }
-        );
-        const data2 = (await res2.data) as AxiosResponse & {
-          bookings: BookingProps[];
-          message: string;
-        };
-        const guests = [];
-        for (const booking of data2.bookings) {
-          if (booking.checkedIn) {
-            guests.push(booking.checkedIn.primaryGuest);
-            guests.push(...booking.checkedIn.additionalGuests);
-          }
-        }
-        const groupGuests = groupBy(guests, (guest) => guest.roomNumber);
-        setGuestsByRoom(groupGuests);
+        // const res2 = await axios.get(
+        //   SERVER_URL + "/manager/getAllBookings/" + id,
+        //   {
+        //     headers: {
+        //       Authorization: `Bearer ${user?.token}`,
+        //     },
+        //   }
+        // );
+        // const data2 = (await res2.data) as AxiosResponse & {
+        //   bookings: BookingProps[];
+        //   message: string;
+        // };
+        // const guests = [];
+        // for (const booking of data2.bookings) {
+        //   if (booking.checkedIn) {
+        //     guests.push(booking.checkedIn.primaryGuest);
+        //     guests.push(...booking.checkedIn.additionalGuests);
+        //   }
+        // }
+        // const groupGuests = groupBy(guests, (guest) => guest.roomNumber);
+        // setGuestsByRoom(groupGuests);
       } catch (error) {
         console.log(error);
         toast.error("Failed to fetch rooms");
@@ -632,27 +640,135 @@ const PropertyById: FC<Props> = () => {
                 </div>
               </Tab>
               <Tab key={"guest-reviews"} title="Guest Reviews">
-                <Card shadow="none" className="p-0">
-                  <CardBody>
-                    Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-                    Excepturi, molestias quidem! Possimus non repellendus ex
-                    maxime natus libero eaque! Repellat perspiciatis sequi culpa
-                    consequatur soluta, ex dolore temporibus reiciendis aliquam?
-                  </CardBody>
-                </Card>
+                <div className="p-3">
+                  <div className="flex flex-col justify-start items-start gap-5">
+                    {reviews && reviews.length > 0 ? (
+                      reviews.map((review, i) => {
+                        return (
+                          <div
+                            key={i}
+                            className="flex flex-col gap-1.5 w-full p-5 bg-white rounded-xl"
+                          >
+                            <div className="flex items-start justify-between gap-2.5">
+                              <div className="flex items-center gap-2.5">
+                                <Avatar className="h-10 w-10 rounded-full">
+                                  <AvatarImage
+                                    src={review.profilePicture as string}
+                                    alt={review.userName}
+                                  />
+                                  <AvatarFallback>
+                                    <span className="text-sm font-semibold">
+                                      {review.userName[0]}
+                                    </span>
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col items-start justify-center">
+                                  <span className="text-md font-sora font-semibold">
+                                    {review.userName}{" "}
+                                    {review.createdAt && (
+                                      <span className="font-inter text-xs font-normal">
+                                        ({dayjs().to(dayjs(review.createdAt))})
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className="font-rubik text-sm">
+                                    {review.userEmailAddress}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className={cn(
+                                    "flex items-center rounded-md bg-green-500 p-2 font-inter text-sm font-semibold text-white",
+                                    review.rating === 1
+                                      ? "bg-red-500"
+                                      : review.rating === 2
+                                      ? "bg-red-500"
+                                      : review.rating === 3
+                                      ? "bg-yellow-500"
+                                      : review.rating === 4
+                                      ? "bg-yellow-500"
+                                      : review.rating === 5
+                                      ? "bg-green-500"
+                                      : "bg-green-500"
+                                  )}
+                                >
+                                  {review.rating}{" "}
+                                  <Star className="h-4 w-4 fill-white text-white" />
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-sm font-normal ml-12 rounded-lg bg-zinc-50 p-2 font-rubik">
+                              {review.review}
+                            </p>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p>No reviews found</p>
+                    )}
+                  </div>
+                </div>
               </Tab>
               <Tab key={"complaints"} title="Complaints">
-                <Card shadow="none" className="p-0">
-                  <CardBody>
-                    Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-                    Excepturi, molestias quidem! Possimus non repellendus ex
-                    maxime natus libero eaque! Repellat perspiciatis sequi culpa
-                    consequatur soluta, ex dolore temporibus reiciendis aliquam?
-                  </CardBody>
-                </Card>
+                <div className="p-3">
+                  <div className="flex flex-col gap-5 justify-start items-start">
+                    {complaints && complaints.length > 0 ? (
+                      complaints.map((complaint, i) => {
+                        return (
+                          <div
+                            key={i}
+                            className="flex flex-col gap-2.5 w-full p-5 bg-white rounded-xl"
+                          >
+                            <div className="flex items-start justify-between gap-2.5">
+                              <div className="flex items-center gap-2.5">
+                                <Avatar className="h-10 w-10 rounded-full">
+                                  <AvatarFallback>
+                                    <span className="text-sm font-semibold">
+                                      {complaint.userName[0]}
+                                    </span>
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col items-start justify-center">
+                                  <span className="text-md font-sora font-semibold">
+                                    {complaint.userName}{" "}
+                                    {complaint.createdAt && (
+                                      <span className="font-inter text-xs font-normal">
+                                        (
+                                        {dayjs().to(dayjs(complaint.createdAt))}
+                                        )
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className="font-rubik text-sm">
+                                    {complaint.userEmailAddress}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className={cn(
+                                    "flex items-center rounded-md bg-red-500 p-2 font-inter text-sm font-semibold text-white"
+                                  )}
+                                >
+                                  {complaint.complaintType}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-sm font-normal ml-12 rounded-lg bg-zinc-50 p-2 font-rubik">
+                              {complaint.complaintDetails}
+                            </p>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p>No complaints found</p>
+                    )}
+                  </div>
+                </div>
               </Tab>
               <Tab key={"inhouse-guest"} title="In House Guest" className="p-5">
-                <div className="flex flex-col justify-start items-start gap-5 *:w-full">
+                {/* <div className="flex flex-col justify-start items-start gap-5 *:w-full">
                   {Array.from(guestsByRoom).map((guest) => {
                     console.log(guest, "guest of sgs");
                     return (
@@ -713,7 +829,7 @@ const PropertyById: FC<Props> = () => {
                   {Array.from(guestsByRoom).length === 0 && (
                     <Heading variant="subtitle">No guests found</Heading>
                   )}
-                </div>
+                </div> */}
               </Tab>
               <Tab key={"staffs"} title="Staffs">
                 <Card shadow="none" className="p-0">

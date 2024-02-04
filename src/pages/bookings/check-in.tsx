@@ -60,7 +60,7 @@ const CheckIn: FC<Props> = () => {
   const { id } = useParams<{ id: string }>();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState<boolean>(false);
-  const [, setUpdatingBooking] = useState<boolean>(false);
+  const [updatingBooking, setUpdatingBooking] = useState<boolean>(false);
   const [booking, setBooking] = useState<BookingProps>();
   const [rooms, setRooms] = useState<RoomProps[]>();
   const [checkInDate, setCheckInDate] = React.useState<Date | undefined>();
@@ -566,6 +566,7 @@ const CheckIn: FC<Props> = () => {
           </div>
           <div className="w-full py-5 px-2.5 flex items-center justify-end">
             <Button
+              isLoading={updatingBooking}
               onClick={handleUpdateBooking}
               className="px-8 font-semibold bg-black text-white"
             >
