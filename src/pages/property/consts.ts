@@ -31,3 +31,14 @@ export const Permissions = [
 
 export const PropertyTypeEnum = ["Hostel/PG", "Hotel", "Family Apartment"];
 export const MealNameEnum = ["Breakfast", "Lunch", "Snack", "Dinner"];
+
+export const UserRoles = Object.freeze({
+  ADMIN: "Admin",
+  OWNER: "Owner",
+  MANAGER: "Manager",
+  USER: "User",
+  ACCOUNTANT: "Accountant",
+  SALESMANAGER: "SalesManager",
+  SUPERVISOR: "Supervisor",
+  CHEF: "Chef",
+});

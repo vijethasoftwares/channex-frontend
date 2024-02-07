@@ -149,7 +149,7 @@ const Analytics: FC<Props> = () => {
               </ResponsiveContainer>
             </div>
           </div>
-          <div>
+          {/* <div>
             <Heading variant="subheading" className="pt-2.5 pb-5">
               Revenue by Rooms
             </Heading>
@@ -182,7 +182,7 @@ const Analytics: FC<Props> = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </div>
+          </div> */}
           <div>
             <Heading variant="subheading" className="pt-2.5 pb-5">
               Arrivals and Departures Today

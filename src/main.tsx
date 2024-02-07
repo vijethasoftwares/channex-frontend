@@ -29,6 +29,7 @@ import AllReviews from "./pages/reviews/all.tsx";
 import AddRoom from "./pages/rooms/add.tsx";
 import AllRooms from "./pages/rooms/all.tsx";
 import EditRoom from "./pages/rooms/edit.tsx";
+import CreateUser from "./pages/user/create.tsx";
 
 const router = createBrowserRouter([
   {
@@ -147,6 +148,15 @@ const router = createBrowserRouter([
           {
             path: "add",
             element: <AddReview />,
+          },
+        ],
+      },
+      {
+        path: "user",
+        children: [
+          {
+            path: "create",
+            element: <CreateUser />,
           },
         ],
       },

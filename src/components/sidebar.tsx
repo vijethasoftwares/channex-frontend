@@ -5,6 +5,7 @@ import {
   LayoutGrid,
   MapPinned,
   Star,
+  User2,
   WalletCards,
 } from "lucide-react";
 import { FC } from "react";
@@ -94,6 +95,12 @@ const ReviewLinks = [
     link: "/reviews/add",
   },
 ];
+const UserLinks = [
+  {
+    title: "create",
+    link: "/user/create",
+  },
+];
 
 const SideBar: FC<Props> = () => {
   return (
@@ -149,6 +156,15 @@ const SideBar: FC<Props> = () => {
         </CollapsableDropdown>
         <CollapsableDropdown title="Reviews" icon={<Star size={18} />}>
           {ReviewLinks.map((link, i) => (
+            <CollapsableDropdownItem
+              key={i}
+              title={link.title}
+              link={link.link}
+            />
+          ))}
+        </CollapsableDropdown>
+        <CollapsableDropdown title="User" icon={<User2 size={18} />}>
+          {UserLinks.map((link, i) => (
             <CollapsableDropdownItem
               key={i}
               title={link.title}
