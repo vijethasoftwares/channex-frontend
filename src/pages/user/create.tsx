@@ -66,8 +66,12 @@ const CreateUser: FC<Props> = () => {
     console.log(resObject);
 
     try {
-      console.log(userRole);
-      if (Array.from(userRole).join() === UserRoleEnum[1]) {
+      console.log(
+        Array.from(userRole).join().toString(),
+        UserRoleEnum[1],
+        "userRole"
+      );
+      if (Array.from(userRole).toString() === UserRoleEnum[0]) {
         const res = await axios.post(
           SERVER_URL + "/owner/create-manager",
           resObject,
