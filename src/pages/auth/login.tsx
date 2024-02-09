@@ -52,6 +52,7 @@ const Login: FC<Props> = () => {
     return axios
       .post(`${SERVER_URL}/auth/verifyOtp`, {
         otp: formData.otp,
+        phoneNumber: formData.phone,
       })
       .then((res: AxiosResponse) => {
         const { data } = res;
