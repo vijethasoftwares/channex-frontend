@@ -3,7 +3,7 @@ import ContainerColumn from "@/components/container-column";
 import Heading from "@/components/heading";
 import { Button } from "@/components/ui/button";
 import { SERVER_URL, useGlobalContext } from "@/lib/utils";
-import { Input, Select, SelectItem } from "@nextui-org/react";
+import { Input, Select, SelectItem, Selection } from "@nextui-org/react";
 import axios, { AxiosError } from "axios";
 import React, { FC, useState } from "react";
 import toast from "react-hot-toast";
@@ -18,7 +18,7 @@ const UserRoleEnum = [UserRoles.MANAGER, UserRoles.CHEF, UserRoles.ACCOUNTANT]; 
 const CreateUser: FC<Props> = () => {
   const { user } = useGlobalContext();
 
-  const [userRole, setUserRole] = useState("");
+  const [userRole, setUserRole] = useState<Selection>(new Set([]));
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -56,6 +56,7 @@ const CreateUser: FC<Props> = () => {
     }
 
     const resObject = {
+      userRole,
       username,
       email,
       name,
@@ -65,7 +66,8 @@ const CreateUser: FC<Props> = () => {
     console.log(resObject);
 
     try {
-      if (userRole === UserRoleEnum[1]) {
+      console.log(userRole);
+      if (Array.from(userRole).join() === UserRoleEnum[1]) {
         const res = await axios.post(
           SERVER_URL + "/owner/create-manager",
           resObject,
@@ -105,8 +107,8 @@ const CreateUser: FC<Props> = () => {
             radius="md"
             size="lg"
             variant="bordered"
-            value={[userRole]}
-            onChange={(e) => setUserRole(e.target.value)}
+            selectedKeys={userRole}
+            onSelectionChange={setUserRole}
             fullWidth
           >
             {UserRoleEnum.map((userRole) => (
