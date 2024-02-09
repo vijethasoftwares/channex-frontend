@@ -105,7 +105,7 @@ const CreateUser: FC<Props> = () => {
             radius="md"
             size="lg"
             variant="bordered"
-            value={userRole}
+            value={[userRole]}
             onChange={(e) => setUserRole(e.target.value)}
             fullWidth
           >
