@@ -26,7 +26,7 @@ const CreateUser: FC<Props> = () => {
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+    console.log("submitting form", e.target);
 
     if (!user?.userId) {
       toast.error("please login first to proceed");
