@@ -33,7 +33,7 @@ const CreateUser: FC<Props> = () => {
       return;
     }
 
-    if (userRole.length === 0) {
+    if (Array.from(userRole).join().length === 0) {
       toast.error("Please select a user role first");
       return;
     }
