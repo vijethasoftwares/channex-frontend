@@ -24,46 +24,43 @@ type Props = {
 };
 
 const NavbarComp: FC<Props> = () => {
-  const { user, setUser } = useGlobalContext() as GlobalContextType;
+  const { user, setUser, loading } = useGlobalContext() as GlobalContextType;
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  const fetchuser = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get(`${SERVER_URL}/user/load-user`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+      const data = res.data;
+      setUser({ ...user, ...data.user });
+    } catch (error) {
+      navigate("/login");
+      console.error("Error fetching user data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  console.log(user);
+
   useEffect(() => {
-    const fetchUser = async () => {
-      setIsLoading(true);
-      try {
-        axios
-          .get(`${SERVER_URL}/user/load-user`, {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          })
-          .then((response) => {
-            const { data } = response;
-            setUser({ ...user, ...data.user });
-            // navigate("/dashboard/analytics");
-          })
-          .catch((error) => {
-            navigate("/login");
-            console.error("Error fetching user data:", error);
-          })
-          .finally(() => {
-            setIsLoading(false);
-          });
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    if (user?.userId) fetchUser();
+    if (!user?.token && !loading) {
+      navigate("/login");
+    }
+    if (user?.token) {
+      fetchuser();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.token]);
-  console.log(user);
 
   const userInitials = user?.role ? user?.role.split(" ").map((n) => n[0]) : "";
 
   const handleSignOut = () => {
     setUser(null as unknown as UserProps);
-    localStorage.removeItem("_rfou");
+    localStorage.removeItem("user");
   };
 
   if (isLoading) {

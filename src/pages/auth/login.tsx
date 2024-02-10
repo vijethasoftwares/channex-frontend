@@ -7,7 +7,6 @@ import { SERVER_URL, useGlobalContext } from "@/lib/utils";
 import axios, { AxiosResponse } from "axios";
 import { FC, useState } from "react";
 import toast from "react-hot-toast";
-import OTPInput from "react-otp-input";
 import { useNavigate } from "react-router-dom";
 
 type Props = {
@@ -15,92 +14,42 @@ type Props = {
 };
 
 const Login: FC<Props> = () => {
-  const { user, setUser } = useGlobalContext() as GlobalContextType;
+  const { setUser } = useGlobalContext() as GlobalContextType;
 
-  const [activeStep, setActiveStep] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState({
-    phone: "",
-    otp: "",
+    emailOrPhone: "",
+    password: "",
   });
 
   const navigate = useNavigate();
-
-  const handleChangeOtp = (otp: string) => {
-    setFormData({ ...formData, otp });
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  const handleGetOtp = async () => {
-    return axios
-      .post(`${SERVER_URL}/auth/login`, {
-        phoneNumber: formData.phone,
-      })
-      .then((res) => {
-        console.log(res.data);
-        setActiveStep(1);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
-
-  const handleVerifyOtp = async () => {
-    return axios
-      .post(`${SERVER_URL}/auth/verifyOtp`, {
-        otp: formData.otp,
-        phoneNumber: formData.phone,
-      })
-      .then((res: AxiosResponse) => {
-        const { data } = res;
-        const { userId, token, role } = data as UserProps;
-        if (role === "Owner") {
-          toast.success("Login successful");
-          localStorage.setItem(
-            "_rfou",
-            JSON.stringify({ userId, token, role })
-          );
-          setUser({ ...user, userId, token, role });
-          navigate("/");
-        } else {
-          toast.error("You are not authorized to access this page");
-          Promise.reject("You are not authorized to access this page");
-        }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
-
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
-    if (activeStep === 0) {
-      if (formData.phone.length !== 10) {
-        toast.error("Please enter a valid phone number");
-        setIsLoading(false);
-        return;
+    try {
+      setIsLoading(true);
+      const response: AxiosResponse<UserProps> = await axios.post(
+        `${SERVER_URL}/auth/verify/phone-or-email`,
+        formData
+      );
+      const { userId, role, token } = response.data;
+      if (role !== "Owner") {
+        throw new Error("You are not authorized to access this page");
       }
-      toast.promise(handleGetOtp(), {
-        loading: "Sending OTP",
-        success: "OTP sent successfully",
-        error: "Error while sending OTP",
-      });
-      setIsLoading(false);
-    } else {
-      if (formData.otp.length !== 6) {
-        toast.error("Please enter a valid OTP");
-        setIsLoading(false);
-        return;
-      }
-      toast.promise(handleVerifyOtp(), {
-        loading: "Verifying OTP",
-        success: "OTP verified successfully",
-        error: "Error while verifying OTP",
-      });
+      setUser({ userId, role, token });
+      localStorage.setItem("user", JSON.stringify({ userId, role, token }));
+
+      navigate("/dashboard");
+    } catch (error) {
+      const err = error as AxiosResponse & {
+        response: { data: { message: string } };
+      };
+      toast.error(err?.response?.data?.message || "An error occurred");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -145,44 +94,36 @@ const Login: FC<Props> = () => {
             </p>
             <form onSubmit={onSubmit}>
               <div className="mt-5 grid gap-3">
-                {activeStep === 0 && (
-                  <div className="">
-                    <Label className="sr-only" htmlFor="email">
-                      Phone Number
-                    </Label>
-                    <Input
-                      id="phone"
-                      placeholder="Phone Number"
-                      type="number"
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      autoCorrect="off"
-                      disabled={isLoading}
-                      value={formData.phone}
-                      onChange={handleChange}
-                    />
-                  </div>
-                )}
-                {activeStep === 1 && (
-                  <div className="relative flex w-full justify-center">
-                    <OTPInput
-                      value={formData.otp}
-                      placeholder="000000"
-                      onChange={handleChangeOtp}
-                      numInputs={6}
-                      renderSeparator={<span className="text-zinc-300">-</span>}
-                      renderInput={(props) => (
-                        <input
-                          {...props}
-                          style={{ width: "3rem", height: "3rem" }}
-                          className="rounded-md border p-4 text-center text-base"
-                        />
-                      )}
-                    />
-                  </div>
-                )}
-                <Button type="submit" isLoading={isLoading}>
-                  {activeStep === 0 ? "Send OTP" : "Verify OTP"}
+                <div className="">
+                  <Label className="sr-only" htmlFor="email">
+                    Phone Number
+                  </Label>
+                  <Input
+                    id="emailOrPhone"
+                    placeholder="Enter your email address or phone number"
+                    type="text"
+                    autoCorrect="off"
+                    disabled={isLoading}
+                    value={formData.emailOrPhone}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="">
+                  <Label className="sr-only" htmlFor="password">
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    placeholder="Enter your password"
+                    type="password"
+                    autoCorrect="off"
+                    disabled={isLoading}
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                </div>
+                <Button type="submit" isLoading={isLoading} className="px-10">
+                  Login
                 </Button>
               </div>
             </form>
@@ -192,5 +133,4 @@ const Login: FC<Props> = () => {
     </div>
   );
 };
-
 export default Login;

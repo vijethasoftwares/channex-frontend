@@ -22,18 +22,26 @@ const Providers: FC<Props> = (props) => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const _u = localStorage.getItem("_rfou") as string;
-    const parsedUser = JSON.parse(_u) as UserProps;
-    if (
-      parsedUser !== null &&
-      parsedUser !== undefined &&
-      Object.keys(parsedUser).length !== 0
-    ) {
-      setUser(parsedUser);
-      setLoading(false);
-    } else {
+    try {
+      const parsedUser = JSON.parse(
+        localStorage.getItem("user") as string
+      ) as UserProps;
+      if (
+        parsedUser !== null &&
+        parsedUser !== undefined &&
+        Object.keys(parsedUser).length !== 0
+      ) {
+        setUser(parsedUser);
+      } else {
+        setUser(undefined as unknown as UserProps);
+      }
+    } catch (error) {
+      setUser(undefined as unknown as UserProps);
+      window.location.href = "/login";
+    } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -5,6 +5,7 @@ import { SERVER_URL, useGlobalContext } from "@/lib/utils";
 import axios from "axios";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import {
   Area,
   AreaChart,
@@ -26,12 +27,13 @@ type Props = {
 };
 
 const Analytics: FC<Props> = () => {
-  const { user } = useGlobalContext();
+  const { user, loading } = useGlobalContext();
   const [monthlyRevenue, setMonthlyRevenue] =
     useState<{ total: number; _id: { year: number; month: number } }[]>();
   const [, setCheckedIn] = useState();
   const [arrivals, setArrivals] = useState<{ count: number }>();
   const [departures, setDepartures] = useState<{ count: number }>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -51,7 +53,15 @@ const Analytics: FC<Props> = () => {
         toast.error((error as Error)?.message || "An error occurred");
       }
     };
-    if (user?.token) fetchReports();
+    if (!loading) {
+      if (user?.token) {
+        fetchReports();
+      } else {
+        toast.error("You are not authorized to access this page");
+        navigate("/login");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   return (
