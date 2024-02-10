@@ -43,7 +43,7 @@ const Login: FC<Props> = () => {
       setUser({ userId, role, token });
       localStorage.setItem("user", JSON.stringify({ userId, role, token }));
 
-      navigate("/dashboard");
+      navigate("/dashboard/analytics");
     } catch (error) {
       const err = error as AxiosResponse & {
         response: { data: { message: string } };

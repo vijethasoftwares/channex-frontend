@@ -20,6 +20,7 @@ import Guests from "./pages/dashboard/guests.tsx";
 import Report from "./pages/dashboard/report.tsx";
 import Users from "./pages/dashboard/users.tsx";
 import ErrorPage from "./pages/error/index.tsx";
+import Pricing from "./pages/pricing/index.tsx";
 import AddProperty from "./pages/property/add.tsx";
 import AllProperties from "./pages/property/all.tsx";
 import EditProperty from "./pages/property/edit.tsx";
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "dashboard",
+        element: <Analytics />,
         children: [
           {
             path: "analytics",
@@ -159,6 +161,14 @@ const router = createBrowserRouter([
             element: <CreateUser />,
           },
         ],
+      },
+      {
+        path: "*",
+        element: <ErrorPage />,
+      },
+      {
+        path: "pricing",
+        element: <Pricing />,
       },
     ],
   },

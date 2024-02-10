@@ -56,7 +56,7 @@ const AllRooms: FC<Props> = () => {
   const fetchUserProperties = async () => {
     try {
       setIsPropertyLoading(true);
-      const res = await axios.get(SERVER_URL + "/owner/get-all-properties", {
+      const res = await axios.get(SERVER_URL + "/owner/get-my-properties", {
         headers: {
           Authorization: `Bearer ${user?.token}`,
         },

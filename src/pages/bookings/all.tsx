@@ -136,7 +136,7 @@ const AllBooking: FC<Props> = () => {
 
   const fetchUserProperties = async () => {
     try {
-      const res = await axios.get(SERVER_URL + "/owner/get-all-properties", {
+      const res = await axios.get(SERVER_URL + "/owner/get-my-properties", {
         headers: {
           Authorization: `Bearer ${user?.token}`,
         },

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import {
+  DollarSign,
   Flag,
   LandPlot,
   LayoutGrid,
@@ -101,6 +102,12 @@ const UserLinks = [
     link: "/user/create",
   },
 ];
+const PricingLinks = [
+  {
+    title: "All Pricing",
+    link: "/pricing",
+  },
+];
 
 const SideBar: FC<Props> = () => {
   return (
@@ -165,6 +172,18 @@ const SideBar: FC<Props> = () => {
         </CollapsableDropdown>
         <CollapsableDropdown title="User" icon={<User2 size={18} />}>
           {UserLinks.map((link, i) => (
+            <CollapsableDropdownItem
+              key={i}
+              title={link.title}
+              link={link.link}
+            />
+          ))}
+        </CollapsableDropdown>
+        <CollapsableDropdown
+          title="Subscription"
+          icon={<DollarSign size={18} />}
+        >
+          {PricingLinks.map((link, i) => (
             <CollapsableDropdownItem
               key={i}
               title={link.title}
