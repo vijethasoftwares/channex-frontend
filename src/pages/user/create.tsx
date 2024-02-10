@@ -90,7 +90,11 @@ const CreateUser: FC<Props> = () => {
         response: { data: { message: string } };
       };
       toast.error(err?.response?.data?.message);
-      console.log(err?.response?.data?.message || "failed to create a user");
+      console.log(
+        err?.response?.data?.message ||
+          err?.message ||
+          "failed to create a user"
+      );
     }
   };
 
