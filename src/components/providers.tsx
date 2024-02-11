@@ -32,8 +32,6 @@ const Providers: FC<Props> = (props) => {
         Object.keys(parsedUser).length !== 0
       ) {
         setUser(parsedUser);
-      } else {
-        setUser(undefined as unknown as UserProps);
       }
     } catch (error) {
       setUser(undefined as unknown as UserProps);

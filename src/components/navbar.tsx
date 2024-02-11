@@ -13,6 +13,7 @@ import {
 import axios from "axios";
 import { PanelRightClose } from "lucide-react";
 import { FC, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { GlobalContextType } from "./providers";
 import { UserProps } from "./types/app";
@@ -52,6 +53,9 @@ const NavbarComp: FC<Props> = () => {
     }
     if (user?.token) {
       fetchuser();
+    } else {
+      setIsLoading(false);
+      toast.error("Please login to continue");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.token]);
