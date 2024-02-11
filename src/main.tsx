@@ -40,7 +40,6 @@ const router = createBrowserRouter([
     children: [
       {
         path: "dashboard",
-        element: <Analytics />,
         children: [
           {
             path: "analytics",

@@ -1,3 +1,6 @@
+import Container from "@/components/container";
+import ContainerColumn from "@/components/container-column";
+import Heading from "@/components/heading";
 import { FC } from "react";
 
 type Props = {
@@ -5,7 +8,13 @@ type Props = {
 };
 
 const Users: FC<Props> = () => {
-  return <div>Users</div>;
+  return (
+    <Container>
+      <ContainerColumn>
+        <Heading>Users</Heading>
+      </ContainerColumn>
+    </Container>
+  );
 };
 
 export default Users;

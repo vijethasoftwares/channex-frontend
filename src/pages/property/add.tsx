@@ -22,6 +22,7 @@ import {
   useGlobalContext,
 } from "@/lib/utils";
 import {
+  Avatar,
   Checkbox,
   Input,
   Modal,
@@ -38,7 +39,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, X } from "lucide-react";
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import {
@@ -79,6 +80,12 @@ interface PropertyProps {
   isCoupleFriendly?: boolean;
   foodMenu?: FoodMenuProps[];
   managerId?: string;
+  document?: {
+    propertyOwnStatus: string;
+    documentType: string;
+    documentNumber: string;
+    pdfUrl: string;
+  };
 }
 
 interface FoodMenuProps {
@@ -98,6 +105,23 @@ interface PlacesData {
   types: string[];
   rating: number;
 }
+
+type UserProps = {
+  _id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  profilePicture: string;
+};
+
+const PropertyOwnStatus = ["Owned", "Rented", "Leased"];
+const DocumentTypeOwned = [
+  "Aadhar Card",
+  "PAN Card",
+  "Voter ID",
+  "Driving License",
+];
+const DocumentTypeRentedOrLeased = ["NOC / Rent Agreement / Lease Agreement"];
 
 const GOOGLE_API_KEY = import.meta.env.VITE_MAP_API_KEY as string;
 
@@ -135,10 +159,8 @@ const AddProperty: FC<Props> = () => {
   /*
    ** Manager States
    */
-  const [managerName, setManagerName] = useState<string>("");
-  const [managerEmail, setManagerEmail] = useState<string>("");
-  const [managerPhoneNumber, setManagerPhoneNumber] = useState<string>("");
-  const [managerId, setManagerId] = useState<string>("");
+  const [allManagers, setAllManagers] = useState<UserProps[]>([]);
+  const [managerId, setManagerId] = useState<Selection>(new Set([]));
 
   /*
    ** Food Menu States
@@ -184,7 +206,13 @@ const AddProperty: FC<Props> = () => {
   const [nonVegMealItemsArray, setNonVegMealItemsArray] = useState<string[]>(
     []
   );
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  //documents states
+  const [propertyOwnStatus, setPropertyOwnStatus] = useState<Selection>(
+    new Set([])
+  );
+  const [documentType, setDocumentType] = useState<Selection>(new Set([]));
+  const [documentNumber, setDocumentNumber] = useState<string>("");
+  const [documentPdfUrl, setDocumentPdfUrl] = useState<string>("");
   const {
     isOpen: isOpenDocuments,
     onOpen: onOpenDocuments,
@@ -336,6 +364,25 @@ const AddProperty: FC<Props> = () => {
     }
   };
 
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length === 1) {
+      const file = e.target.files[0];
+      const fileRef = ref(
+        storage,
+        `property_documents/${file.name}-${Array.from(
+          propertyOwnStatus
+        ).toString()}-${Array.from(documentType).toString()}-${documentNumber}`
+      );
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      setDocumentPdfUrl(url);
+      console.log(url);
+      toast.success("Document uploaded successfully");
+    } else {
+      toast.error("You can only upload 1 pdf");
+    }
+  };
+
   const handleImageDelete = (index: number) => {
     const newImages = [...images];
     newImages.splice(index, 1);
@@ -345,6 +392,23 @@ const AddProperty: FC<Props> = () => {
   const handleSubmit: () => Promise<void> = async () => {
     // const img = await convertImagesToBase64(images);
     setSubmitting(true);
+    const mId = Array.from(managerId).toString();
+    if (!mId) {
+      toast.error("Please add a manager first");
+      setSubmitting(false);
+      return;
+    }
+    if (!coordinate.lat || !coordinate.lng) {
+      toast.error("Please provide a valid location");
+      setSubmitting(false);
+      return;
+    }
+    if (documentPdfUrl.length == 0) {
+      toast.error("Please upload the document pdf");
+      setSubmitting(false);
+      return;
+    }
+    const selectedManager = allManagers.find((manager) => manager._id === mId);
     const np = Array.from(nearbyPlaces) as string[];
     const p = Array.from(permissions) as string[];
     const f = Array.from(facilities) as string[];
@@ -368,11 +432,17 @@ const AddProperty: FC<Props> = () => {
       isParkingSpaceAvailable: ipsa[0],
       isCoupleFriendly: coupleFriendly,
       foodMenu: foodMenu,
-      managerId: managerId,
+      managerId: mId,
       manager: {
-        name: managerName,
-        email: managerEmail,
-        phoneNumber: managerPhoneNumber,
+        name: selectedManager?.name || "",
+        email: selectedManager?.email || "",
+        phoneNumber: selectedManager?.phoneNumber || "",
+      },
+      document: {
+        propertyOwnStatus: Array.from(propertyOwnStatus).toString(),
+        documentType: Array.from(documentType).toString(),
+        documentNumber: documentNumber,
+        pdfUrl: documentPdfUrl,
       },
     };
     console.log(property);
@@ -403,13 +473,10 @@ const AddProperty: FC<Props> = () => {
   const uploadImagesToFirebase = async (images: File[]) => {
     const imageUrls = [];
 
+    const t = toast.loading("Uploading images...");
     try {
-      toast.loading("Uploading images...");
       for (const image of images) {
-        const imageRef = ref(
-          storage,
-          `property_images/${Date.now()}-${image.name}`
-        );
+        const imageRef = ref(storage, `property/${Date.now()}-${image.name}`);
         await uploadBytes(imageRef, image);
         const imageUrl = await getDownloadURL(imageRef);
         imageUrls.push({
@@ -417,50 +484,30 @@ const AddProperty: FC<Props> = () => {
           url: imageUrl,
         });
       }
+      toast.success("Images uploaded successfully");
       return imageUrls;
     } catch (error) {
+      const err = error as Error & { message: string };
       console.error("Error uploading images:", error);
+      toast.error(err?.message || "An error occurred while uploading images");
       return [];
     } finally {
-      toast.dismiss();
-      toast.success("Images uploaded successfully");
+      toast.dismiss(t);
     }
   };
 
-  const handleAddManager = async () => {
-    if (!managerName || !managerPhoneNumber) {
-      toast.error("Required fields are missing");
+  console.log();
+
+  const handleAddDocument = async () => {
+    if (documentPdfUrl.length == 0) {
+      toast.error("Please upload the document pdf");
       return;
     }
-    const ToastID = toast.loading("Adding manager...");
-    try {
-      const res = await axios.post(
-        SERVER_URL + "/admin/create-manager",
-        {
-          phoneNumber: managerPhoneNumber,
-          name: managerName,
-          email: managerEmail || "",
-        },
-        {
-          headers: {
-            Authorization: "Bearer " + user.token,
-          },
-        }
-      );
-      const data = await res.data;
-      console.log(data);
-      toast.success(data.message || "Manager added successfully");
-      setManagerId(data.data._id);
-    } catch (error) {
-      console.log(error);
-      toast.error("An error occurred while adding manager");
-      setManagerEmail("");
-      setManagerName("");
-      setManagerPhoneNumber("");
-    } finally {
-      toast.dismiss(ToastID);
-      onOpenChange();
+    if (!documentNumber) {
+      toast.error("Document number cannot be empty");
+      return;
     }
+    onOpenChangeDocuments();
   };
   const handleAddMeal = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -532,6 +579,26 @@ const AddProperty: FC<Props> = () => {
     setNonVegMealItemsArray([]);
     onOpenChangeFoodMenu();
   };
+
+  useEffect(() => {
+    if (user?.token) {
+      (async () => {
+        try {
+          const res = await axios.get(SERVER_URL + "/owner/managers/me", {
+            headers: {
+              Authorization: "Bearer " + user.token,
+            },
+          });
+          const data = await res.data;
+          setAllManagers(data.managers);
+        } catch (error) {
+          console.error(error);
+        }
+      })();
+    } else {
+      toast.error("Login first to add property");
+    }
+  }, [user]);
 
   return (
     <>
@@ -1112,13 +1179,42 @@ const AddProperty: FC<Props> = () => {
             >
               Add Documents
             </Button>
-            <Button
-              onClick={onOpen}
-              variant="outline"
-              className=" active:scale-95"
+            <Select
+              items={allManagers}
+              // label="Assigned to"
+              placeholder="Select a manager"
+              labelPlacement="outside"
+              className="max-w-[250px]"
+              selectedKeys={managerId}
+              onSelectionChange={setManagerId}
+              classNames={{
+                trigger:
+                  "bg-white border border-gray-300 rounded-md w-full px-3 py-2 text-sm text-gray-700 text-black",
+              }}
+              // classNames={{
+              //   trigger:
+              //     "bg-white border border-gray-300 rounded-md w-full px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 ease-in-out",
+              // }}
             >
-              Add Manager
-            </Button>
+              {(user) => (
+                <SelectItem key={user?._id} textValue={user?.name}>
+                  <div className="flex gap-2 items-center">
+                    <Avatar
+                      alt={user?.name}
+                      className="flex-shrink-0"
+                      size="sm"
+                      src={user?.profilePicture}
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-small">{user?.name}</span>
+                      <span className="text-tiny text-default-400">
+                        {user?.email}
+                      </span>
+                    </div>
+                  </div>
+                </SelectItem>
+              )}
+            </Select>
             <Button
               onClick={handleSubmit}
               isLoading={submitting}
@@ -1142,115 +1238,110 @@ const AddProperty: FC<Props> = () => {
                 Add Documents
               </ModalHeader>
               <ModalBody>
-                <Input
-                  autoFocus
-                  label="Name"
+                <Select
+                  color="default"
+                  label="Property Ownership Status"
                   labelPlacement="outside"
-                  placeholder="Enter manager name"
-                  variant="bordered"
-                  size="lg"
+                  placeholder="Select an option"
+                  selectedKeys={propertyOwnStatus}
+                  onSelectionChange={setPropertyOwnStatus}
                   radius="md"
-                  // value={managerName}
-                  // onValueChange={setManagerName}
-                  isRequired
-                />
-                <Input
-                  autoFocus
-                  label="Email"
-                  labelPlacement="outside"
-                  placeholder="Enter manager email"
-                  variant="bordered"
                   size="lg"
-                  radius="md"
-                  // value={managerEmail}
-                  // onValueChange={setManagerEmail}
-                  isRequired
-                />
-                <Input
-                  autoFocus
-                  type="number"
-                  label="Phone Number"
-                  labelPlacement="outside"
-                  placeholder="Enter manager phone number"
                   variant="bordered"
-                  size="lg"
-                  radius="md"
-                  // value={managerPhoneNumber}
-                  // onValueChange={setManagerPhoneNumber}
-                />
-              </ModalBody>
-              <ModalFooter>
-                <Button className="px-8" variant="ghost" onClick={onClose}>
-                  Close
-                </Button>
-                <Button className="px-8">Add</Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-      <Modal backdrop="blur" isOpen={isOpen} onOpenChange={onOpenChange}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Add Manager Details
-              </ModalHeader>
-              <ModalBody>
-                <Input
-                  autoFocus
-                  type="number"
-                  label="Phone Number"
-                  labelPlacement="outside"
-                  placeholder="Enter manager phone number"
-                  variant="bordered"
-                  size="lg"
-                  radius="md"
-                  value={managerPhoneNumber}
-                  onValueChange={setManagerPhoneNumber}
-                />
-                <Input
-                  autoFocus
-                  label="Name"
-                  labelPlacement="outside"
-                  placeholder="Enter manager name"
-                  variant="bordered"
-                  size="lg"
-                  radius="md"
-                  value={managerName}
-                  onValueChange={setManagerName}
-                  isRequired
-                />
-                <Input
-                  autoFocus
-                  label="Email"
-                  labelPlacement="outside"
-                  placeholder="Enter manager email"
-                  variant="bordered"
-                  size="lg"
-                  radius="md"
-                  value={managerEmail}
-                  onValueChange={setManagerEmail}
-                  isRequired
-                />
-              </ModalBody>
-              <ModalFooter>
-                <Button className="px-8" variant="ghost" onClick={onClose}>
-                  Close
-                </Button>
-                <Button
-                  className="px-8"
-                  onClick={() => {
-                    handleAddManager();
-                  }}
                 >
-                  Add
+                  {PropertyOwnStatus.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </Select>
+                {Array.from(propertyOwnStatus).toString() ===
+                  PropertyOwnStatus[0] && (
+                  <Select
+                    color="default"
+                    label="Document Type"
+                    labelPlacement="outside"
+                    placeholder="Select an option"
+                    selectedKeys={documentType}
+                    onSelectionChange={setDocumentType}
+                    radius="md"
+                    size="lg"
+                    variant="bordered"
+                  >
+                    {DocumentTypeOwned.map((type) => {
+                      return (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      );
+                    })}
+                  </Select>
+                )}
+                {(Array.from(propertyOwnStatus).toString() ===
+                  PropertyOwnStatus[1] ||
+                  Array.from(propertyOwnStatus).toString() ===
+                    PropertyOwnStatus[2]) && (
+                  <Select
+                    color="default"
+                    label="Document Type"
+                    labelPlacement="outside"
+                    placeholder="Select an option"
+                    selectedKeys={documentType}
+                    onSelectionChange={setDocumentType}
+                    radius="md"
+                    size="lg"
+                    variant="bordered"
+                  >
+                    {DocumentTypeRentedOrLeased.map((type) => {
+                      return (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      );
+                    })}
+                  </Select>
+                )}
+                {Array.from(documentType).toString().length > 0 && (
+                  <div className="relative px-5 w-full py-7 bg-zinc-100 rounded-md border-dashed border-2">
+                    <input
+                      type="file"
+                      multiple={true}
+                      required
+                      accept="image/*"
+                      onChange={handlePdfUpload}
+                      className="w-full h-full absolute top-0 right-0 bottom-0 left-0 opacity-0 cursor-pointer z-10"
+                    />
+                    <span className="inset-0 absolute z-[1] text-sm text-zinc-600 flex justify-center items-center">
+                      + Upload Document
+                    </span>
+                  </div>
+                )}
+                <Input
+                  autoFocus
+                  type="text"
+                  label="Document Number"
+                  labelPlacement="outside"
+                  placeholder="Enter document number"
+                  variant="bordered"
+                  size="lg"
+                  radius="md"
+                  value={documentNumber}
+                  onValueChange={setDocumentNumber}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button className="px-8" variant="ghost" onClick={onClose}>
+                  Close
+                </Button>
+                <Button className="px-8" onClick={() => handleAddDocument()}>
+                  Add Document
                 </Button>
               </ModalFooter>
             </>
           )}
         </ModalContent>
       </Modal>
+
       <Modal
         isDismissable={false}
         backdrop="blur"
