@@ -56,7 +56,7 @@ const CreateUser: FC<Props> = () => {
     }
 
     const resObject = {
-      userRole,
+      userRole: Array.from(userRole).join().toString(),
       username,
       email,
       name,
