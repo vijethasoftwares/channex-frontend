@@ -71,20 +71,18 @@ const CreateUser: FC<Props> = () => {
         UserRoleEnum[1],
         "userRole"
       );
-      if (Array.from(userRole).toString() === UserRoleEnum[0]) {
-        const res = await axios.post(
-          SERVER_URL + "/owner/create-manager",
-          resObject,
-          {
-            headers: {
-              Authorization: "Bearer " + user.token,
-            },
-          }
-        );
-        const data = res.data;
-        toast.success(data?.message || "user created successfully");
-        console.log(data);
-      }
+      const res = await axios.post(
+        SERVER_URL + "/owner/create-manager",
+        resObject,
+        {
+          headers: {
+            Authorization: "Bearer " + user.token,
+          },
+        }
+      );
+      const data = res.data;
+      toast.success(data?.message || "user created successfully");
+      console.log(data);
     } catch (error) {
       const err = error as AxiosError & {
         response: { data: { message: string } };
