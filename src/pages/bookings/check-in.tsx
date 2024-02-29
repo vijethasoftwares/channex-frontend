@@ -138,6 +138,7 @@ const CheckIn: FC<Props> = () => {
         additionalGuests,
       },
     };
+    console.log(data, "data");
     try {
       const res = await axios.patch(
         SERVER_URL + `/manager/update-booking/check-in/${id}`,
@@ -237,7 +238,7 @@ const CheckIn: FC<Props> = () => {
                       !checkInDate && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
                     {checkInDate ? (
                       format(checkInDate, "PPP")
                     ) : (
@@ -270,7 +271,7 @@ const CheckIn: FC<Props> = () => {
                       !checkOutDate && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
                     {checkOutDate ? (
                       format(checkOutDate, "PPP")
                     ) : (
@@ -818,8 +819,8 @@ const PrimaryGuestForm: React.FC<PrimaryGuestFormProps> = ({
       {/* Add other fields similarly */}
       <Button
         type="submit"
-        variant="light"
-        className="mb-2 w-full col-span-3 py-6 font-semibold"
+        variant="solid"
+        className="mb-2 bg-zinc-900 text-white w-full col-span-3 py-6 font-semibold"
       >
         Add Primary Guest
       </Button>

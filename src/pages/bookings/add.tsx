@@ -184,7 +184,7 @@ const AddBooking: FC<Props> = () => {
   useEffect(() => {
     const fetchUserProperties = async () => {
       try {
-        const res = await axios.get(SERVER_URL + "/owner/get-all-properties", {
+        const res = await axios.get(SERVER_URL + "/owner/get-my-properties", {
           headers: {
             Authorization: `Bearer ${user?.token}`,
           },
@@ -278,6 +278,7 @@ const AddBooking: FC<Props> = () => {
             )}
           </Select>
           <Input
+            onWheel={(e) => e.currentTarget.blur()}
             type="number"
             name="noOfGuests"
             label="No of Guests"
@@ -439,6 +440,7 @@ const AddBooking: FC<Props> = () => {
                 ))}
               </Select>
               <Input
+                onWheel={(e) => e.currentTarget.blur()}
                 type="number"
                 name="paymentAmount"
                 label="Payment Amount"
@@ -477,6 +479,7 @@ const AddBooking: FC<Props> = () => {
             variant="bordered"
           />
           <Input
+            onWheel={(e) => e.currentTarget.blur()}
             type="number"
             name="guestPhoneNumber"
             label="Guest Phone Number"

@@ -30,7 +30,7 @@ const Analytics: FC<Props> = () => {
   const { user, loading } = useGlobalContext();
   const [monthlyRevenue, setMonthlyRevenue] =
     useState<{ total: number; _id: { year: number; month: number } }[]>();
-  const [, setCheckedIn] = useState();
+  const [checkedIn, setCheckedIn] = useState([]);
   const [arrivals, setArrivals] = useState<{ count: number }>();
   const [departures, setDepartures] = useState<{ count: number }>();
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ const Analytics: FC<Props> = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await axios.get(SERVER_URL + "/owner/get-reports", {
+        const res = await axios.get(SERVER_URL + "/owner/get-analytics", {
           headers: {
             Authorization: `Bearer ${user?.token}`,
           },
@@ -68,6 +68,56 @@ const Analytics: FC<Props> = () => {
     <Container>
       <ContainerColumn>
         <Heading>Analytics</Heading>
+        <div className="p-3 rounded-xl bg-zinc-50 w-full">
+          <h3 className="text-lg font-semibold mb-2.5">Overview</h3>
+          <div className="grid grid-cols-5 gap-5 *:p-4 *:rounded-xl *:bg-white">
+            <div className="flex flex-row items-start justify-between">
+              <h4 className="text-sm font-medium">
+                <span className="text-xs block text-zinc-500">Todays's</span>
+                Check-In
+              </h4>
+              <p className="text-3xl font-semibold text-indigo-500">
+                {checkedIn?.length || 0}
+              </p>
+            </div>
+            <div className="flex flex-row items-start justify-between">
+              <h4 className="text-sm font-medium">
+                <span className="text-xs block text-zinc-500">Todays's</span>
+                Checked-Out
+              </h4>
+              <p className="text-3xl font-semibold text-indigo-500">
+                {departures?.count || 0}
+              </p>
+            </div>
+            <div className="flex flex-row items-start justify-between">
+              <h4 className="text-sm font-medium">
+                <span className="text-xs block text-zinc-500">Total</span>
+                In Hotel
+              </h4>
+              <p className="text-3xl font-semibold text-indigo-500">
+                {checkedIn?.length || 0}
+              </p>
+            </div>
+            <div className="flex flex-row items-start justify-between">
+              <h4 className="text-sm font-medium">
+                <span className="text-xs block text-zinc-500">Total</span>
+                Available Rooms
+              </h4>
+              <p className="text-3xl font-semibold text-indigo-500">
+                {checkedIn?.length || 0}
+              </p>
+            </div>
+            <div className="flex flex-row items-start justify-between">
+              <h4 className="text-sm font-medium">
+                <span className="text-xs block text-zinc-500">Total</span>
+                Occupied Rooms
+              </h4>
+              <p className="text-3xl font-semibold text-indigo-500">
+                {checkedIn.length || 0}
+              </p>
+            </div>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-5 w-full">
           <div className="col-span-2">
             <Heading variant="subheading" className="pt-2.5 pb-5">
