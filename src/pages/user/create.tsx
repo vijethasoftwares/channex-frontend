@@ -13,7 +13,7 @@ type Props = {
   children?: React.ReactNode;
 };
 
-const UserRoleEnum = [UserRoles.MANAGER, UserRoles.CHEF, UserRoles.ACCOUNTANT]; // Defined user roles
+const UserRoleEnum = [UserRoles.OWNER, UserRoles.MANAGER, UserRoles.CHEF, UserRoles.ACCOUNTANT]; // Defined user roles
 
 const CreateUser: FC<Props> = () => {
   const { user } = useGlobalContext();
