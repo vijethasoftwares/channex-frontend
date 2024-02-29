@@ -121,7 +121,7 @@ const Report: FC<Props> = () => {
       bodyStyles: { fontSize: 8 },
       theme: "grid",
     });
-    doc.save("report.pdf");
+    doc.save("report_" + dayjs().format("DD-MM-YYYY") + ".pdf");
   };
 
   const downloadExcel = async () => {
