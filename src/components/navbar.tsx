@@ -8,6 +8,8 @@ import {
   NavbarBrand,
   NavbarContent,
   NavbarItem,
+  Select,
+  SelectItem,
   Spinner,
 } from "@nextui-org/react";
 import axios from "axios";
@@ -15,8 +17,7 @@ import { PanelRightClose } from "lucide-react";
 import { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
-import { GlobalContextType } from "./providers";
-import { UserProps } from "./types/app";
+import { PropertyProps, UserProps } from "./types/app";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 
@@ -25,8 +26,17 @@ type Props = {
 };
 
 const NavbarComp: FC<Props> = () => {
-  const { user, setUser, loading } = useGlobalContext() as GlobalContextType;
+  const {
+    user,
+    setUser,
+    loading,
+    // isPropertyLoading,
+    selectedProperty,
+    setSelectedProperty,
+    setIsPropertyLoading,
+  } = useGlobalContext();
   const [isLoading, setIsLoading] = useState(false);
+  const [userProperties, setUserProperties] = useState<PropertyProps[]>();
   const navigate = useNavigate();
 
   const fetchuser = async () => {
@@ -45,8 +55,32 @@ const NavbarComp: FC<Props> = () => {
     }
   };
 
+  const fetchUserProperties = async () => {
+    try {
+      setIsPropertyLoading(true);
+      const res = await axios.get(SERVER_URL + "/owner/get-my-properties", {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+      const data = await res.data;
+      setUserProperties(data.properties);
+      setSelectedProperty(data.properties[0]._id);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsPropertyLoading(false);
+    }
+  };
+
   console.log(user);
 
+  useEffect(() => {
+    if (user) {
+      fetchUserProperties();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, selectedProperty]);
   useEffect(() => {
     if (!user?.token && !loading) {
       navigate("/login");
@@ -84,6 +118,22 @@ const NavbarComp: FC<Props> = () => {
         </p>
       </NavbarBrand>
       <NavbarContent justify="end">
+        <Select
+          items={userProperties || []}
+          label="Select Property to view rooms"
+          labelPlacement="outside"
+          placeholder="Select Property"
+          variant="bordered"
+          selectedKeys={[selectedProperty]}
+          onChange={(e) => setSelectedProperty(e.target.value)}
+          className="max-w-[15rem]"
+        >
+          {(property) => (
+            <SelectItem key={property._id?.toString() || ""}>
+              {property.name}
+            </SelectItem>
+          )}
+        </Select>
         {user ? (
           <Dropdown placement="bottom-end">
             <DropdownTrigger>

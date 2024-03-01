@@ -2,7 +2,7 @@ import Container from "@/components/container";
 import ContainerBetween from "@/components/container-between";
 import ContainerColumn from "@/components/container-column";
 import Heading from "@/components/heading";
-import { BookingProps, PropertyProps } from "@/components/types/app";
+import { BookingProps } from "@/components/types/app";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -19,6 +19,7 @@ import dayjs from "dayjs";
 import ExcelJS from "exceljs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { Loader2 } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 
 type Props = {
@@ -38,36 +39,16 @@ const reportIntervals: ReportInterval[] = [
 ];
 
 const Report: FC<Props> = () => {
-  const { user } = useGlobalContext();
+  const { user, selectedProperty } = useGlobalContext();
 
   const [report, setReport] = useState<BookingProps[]>([]);
+  const [isReportLoading, setIsReportLoading] = useState<boolean>(false);
   const [selectedReportInterval, setSelectedReportInterval] = useState<string>(
     reportIntervals[0].key
   );
 
-  const [selectedProperty, setSelectedProperty] = useState<string>("");
-  const [userProperties, setUserProperties] = useState<PropertyProps[]>();
-  const [isPropertyLoading, setIsPropertyLoading] = useState<boolean>(false);
-
-  const fetchUserProperties = async () => {
-    try {
-      setIsPropertyLoading(true);
-      const res = await axios.get(SERVER_URL + "/owner/get-my-properties", {
-        headers: {
-          Authorization: `Bearer ${user?.token}`,
-        },
-      });
-      const data = await res.data;
-      setUserProperties(data.properties);
-      setSelectedProperty(data.properties[0]._id);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsPropertyLoading(false);
-    }
-  };
-
   const fetchReport = async () => {
+    setIsReportLoading(true);
     try {
       const res = await axios.get(
         SERVER_URL +
@@ -82,6 +63,8 @@ const Report: FC<Props> = () => {
       setReport(data.report);
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsReportLoading(false);
     }
   };
 
@@ -91,6 +74,7 @@ const Report: FC<Props> = () => {
     const doc = new jsPDF();
     const tableHeaders = [
       [
+        "Folio ID",
         "Guest Name",
         "Guest Email",
         "Total Guests",
@@ -102,14 +86,15 @@ const Report: FC<Props> = () => {
       ],
     ];
     const tableData = report.map((r) => [
-      r.guestName,
-      r.guestEmail,
-      r.numberOfGuests,
-      dayjs(r.from).format("D MMMM YYYY - h:mm a"),
-      dayjs(r.to).format("D MMMM YYYY - h:mm a"),
-      r.checkedIn?.primaryGuest.roomNumber,
-      r.paymentAmount,
-      r.paymentMethod,
+      r?.folioId,
+      r?.guestName,
+      r?.guestEmail,
+      r?.numberOfGuests,
+      dayjs(r?.from).format("D MMMM YYYY - h:mm a"),
+      dayjs(r?.to).format("D MMMM YYYY - h:mm a"),
+      r?.checkedIn?.primaryGuest?.roomNumber,
+      r?.paymentAmount,
+      r?.paymentMethod,
     ]);
     autoTable(doc, {
       head: tableHeaders,
@@ -129,6 +114,12 @@ const Report: FC<Props> = () => {
     const worksheet = workbook.addWorksheet("Report");
 
     worksheet.columns = [
+      {
+        header: "Folio ID",
+        key: "folioId",
+        width: 15,
+        style: { alignment: { horizontal: "left" } },
+      },
       {
         header: "Guest Name",
         key: "guestName",
@@ -182,14 +173,15 @@ const Report: FC<Props> = () => {
 
     report.forEach((r) => {
       worksheet.addRow({
-        guestName: r.guestName,
-        guestEmail: r.guestEmail,
-        totalGuests: r.numberOfGuests,
-        checkInDate: dayjs(r.from).format("D MMMM YYYY - h:mm a"),
-        checkOutDate: dayjs(r.to).format("D MMMM YYYY - h:mm a"),
-        roomNo: r.checkedIn?.primaryGuest.roomNumber,
-        paymentAmount: r.paymentAmount,
-        paymentType: r.paymentMethod,
+        folioId: r?.folioId,
+        guestName: r?.guestName,
+        guestEmail: r?.guestEmail,
+        totalGuests: r?.numberOfGuests,
+        checkInDate: dayjs(r?.from).format("D MMMM YYYY - h:mm a"),
+        checkOutDate: dayjs(r?.to).format("D MMMM YYYY - h:mm a"),
+        roomNo: r?.checkedIn?.primaryGuest?.roomNumber,
+        paymentAmount: r?.paymentAmount,
+        paymentType: r?.paymentMethod,
       });
     });
 
@@ -212,19 +204,6 @@ const Report: FC<Props> = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedProperty, selectedReportInterval]);
 
-  useEffect(() => {
-    if (user) {
-      fetchUserProperties();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  if (isPropertyLoading)
-    return (
-      <div className="px-5 py-10 flex justify-center items-center">
-        Loading...
-      </div>
-    );
   return (
     <Container>
       <ContainerColumn>
@@ -248,22 +227,6 @@ const Report: FC<Props> = () => {
           </div>
           <div className="flex justify-end flex-1 items-end gap-5">
             <Select
-              items={userProperties || []}
-              label="Select Property to view rooms"
-              labelPlacement="outside"
-              placeholder="Select Property"
-              variant="bordered"
-              selectedKeys={[selectedProperty]}
-              onChange={(e) => setSelectedProperty(e.target.value)}
-              className="max-w-[15rem]"
-            >
-              {(property) => (
-                <SelectItem key={property._id?.toString() || ""}>
-                  {property.name}
-                </SelectItem>
-              )}
-            </Select>
-            <Select
               items={reportIntervals.map((interval) => ({
                 value: interval.key,
                 label: interval.label,
@@ -282,47 +245,57 @@ const Report: FC<Props> = () => {
             </Select>
           </div>
         </ContainerBetween>
-
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Guest Name</TableHead>
-              <TableHead>Guest Email</TableHead>
-              <TableHead>Total Guests</TableHead>
-              <TableHead>Check In Date</TableHead>
-              <TableHead>Check Out Date</TableHead>
-              <TableHead>Room No</TableHead>
-              <TableHead>Payment Amount</TableHead>
-              <TableHead>Payment Type</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {report && report.length === 0 && (
+        {isReportLoading && (
+          <div className="px-5 py-10 flex justify-center items-center">
+            <Loader2 className="w-7 h-7 animate-spin" />
+          </div>
+        )}
+        {!isReportLoading && (
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="text-center">
-                  No report available
-                </TableCell>
+                <TableHead>ID</TableHead>
+                <TableHead>Guest Name</TableHead>
+                <TableHead>Guest Email</TableHead>
+                <TableHead>Total Guests</TableHead>
+                <TableHead>Check In Date</TableHead>
+                <TableHead>Check Out Date</TableHead>
+                <TableHead>Room No</TableHead>
+                <TableHead>Payment Amount</TableHead>
+                <TableHead>Payment Type</TableHead>
               </TableRow>
-            )}
-            {report &&
-              report.map((r, index) => (
-                <TableRow key={index}>
-                  <TableCell>{r.guestName}</TableCell>
-                  <TableCell>{r.guestEmail}</TableCell>
-                  <TableCell>{r.numberOfGuests}</TableCell>
-                  <TableCell>
-                    {dayjs(r.from).format("D MMMM YYYY - h:mm a")}
+            </TableHeader>
+            <TableBody>
+              {report && report.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center">
+                    No report available
                   </TableCell>
-                  <TableCell>
-                    {dayjs(r.to).format("D MMMM YYYY - h:mm a")}
-                  </TableCell>
-                  <TableCell>{r.checkedIn?.primaryGuest.roomNumber}</TableCell>
-                  <TableCell>{r.paymentAmount}</TableCell>
-                  <TableCell>{r.paymentMethod}</TableCell>
                 </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+              )}
+              {report &&
+                report.map((r, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{r?.folioId}</TableCell>
+                    <TableCell>{r?.guestName}</TableCell>
+                    <TableCell>{r?.guestEmail}</TableCell>
+                    <TableCell>{r?.numberOfGuests}</TableCell>
+                    <TableCell>
+                      {dayjs(r?.from).format("D MMMM YYYY - h:mm a")}
+                    </TableCell>
+                    <TableCell>
+                      {dayjs(r?.to).format("D MMMM YYYY - h:mm a")}
+                    </TableCell>
+                    <TableCell>
+                      {r?.checkedIn?.primaryGuest?.roomNumber}
+                    </TableCell>
+                    <TableCell>{r?.paymentAmount}</TableCell>
+                    <TableCell>{r?.paymentMethod}</TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        )}
       </ContainerColumn>
     </Container>
   );

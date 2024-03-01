@@ -45,6 +45,7 @@ export interface MealData {
 
 export interface BookingProps {
   _id?: string;
+  folioId?: string;
   user?: UserProps;
   propertyId: string;
   bookingType: string;

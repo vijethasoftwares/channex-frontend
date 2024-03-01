@@ -11,6 +11,10 @@ export type GlobalContextType = {
   setUser: React.Dispatch<React.SetStateAction<UserProps>>;
   loading: boolean;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedProperty: string;
+  setSelectedProperty: React.Dispatch<React.SetStateAction<string>>;
+  isPropertyLoading: boolean;
+  setIsPropertyLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export const GlobalContext = createContext<GlobalContextType>(
@@ -20,6 +24,8 @@ export const GlobalContext = createContext<GlobalContextType>(
 const Providers: FC<Props> = (props) => {
   const [user, setUser] = useState<UserProps>(null as unknown as UserProps);
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedProperty, setSelectedProperty] = useState<string>("");
+  const [isPropertyLoading, setIsPropertyLoading] = useState(false);
 
   useEffect(() => {
     try {
@@ -51,7 +57,18 @@ const Providers: FC<Props> = (props) => {
   }, []);
 
   return (
-    <GlobalContext.Provider value={{ user, setUser, loading, setLoading }}>
+    <GlobalContext.Provider
+      value={{
+        user,
+        setUser,
+        loading,
+        setLoading,
+        isPropertyLoading,
+        selectedProperty,
+        setIsPropertyLoading,
+        setSelectedProperty,
+      }}
+    >
       {props.children}
       {loading && (
         <div className="fixed bg-white inset-0 w-full h-full flex justify-center items-center z-[999]">
