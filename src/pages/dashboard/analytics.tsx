@@ -27,10 +27,12 @@ type Props = {
 };
 
 const Analytics: FC<Props> = () => {
-  const { user, loading } = useGlobalContext();
+  const { user, loading, selectedProperty } = useGlobalContext();
   const [monthlyRevenue, setMonthlyRevenue] =
     useState<{ total: number; _id: { year: number; month: number } }[]>();
-  const [checkedIn, setCheckedIn] = useState([]);
+  const [totalGuestsResiding, setTotalGuestsResiding] = useState<number>(0);
+  const [todaysCheckedIn, setTodaysCheckedIn] = useState();
+  const [todaysCheckedOut, setTodaysCheckedOut] = useState();
   const [arrivals, setArrivals] = useState<{ count: number }>();
   const [departures, setDepartures] = useState<{ count: number }>();
   const navigate = useNavigate();
@@ -38,13 +40,18 @@ const Analytics: FC<Props> = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await axios.get(SERVER_URL + "/owner/get-analytics", {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-          },
-        });
+        const res = await axios.get(
+          SERVER_URL + "/owner/get-analytics/" + selectedProperty,
+          {
+            headers: {
+              Authorization: `Bearer ${user?.token}`,
+            },
+          }
+        );
         const data = res.data;
-        setCheckedIn(data.checkedIn);
+        setTodaysCheckedIn(data.todaysCheckedIn?.[0]?.count);
+        setTodaysCheckedOut(data.todaysCheckedOut?.[0]?.count);
+        setTotalGuestsResiding(data.totalGuestsResiding?.[0]?.count);
         setMonthlyRevenue(data.monthly);
         setArrivals(data.arrivals[0]);
         setDepartures(data.departures[0]);
@@ -53,8 +60,8 @@ const Analytics: FC<Props> = () => {
         toast.error((error as Error)?.message || "An error occurred");
       }
     };
-    if (!loading) {
-      if (user?.token) {
+    if (!loading && user && selectedProperty) {
+      if ((user?.token, selectedProperty)) {
         fetchReports();
       } else {
         toast.error("You are not authorized to access this page");
@@ -62,7 +69,7 @@ const Analytics: FC<Props> = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, selectedProperty]);
 
   return (
     <Container>
@@ -77,7 +84,7 @@ const Analytics: FC<Props> = () => {
                 Check-In
               </h4>
               <p className="text-3xl font-semibold text-indigo-500">
-                {checkedIn?.length || 0}
+                {todaysCheckedIn || 0}
               </p>
             </div>
             <div className="flex flex-row items-start justify-between">
@@ -86,7 +93,7 @@ const Analytics: FC<Props> = () => {
                 Checked-Out
               </h4>
               <p className="text-3xl font-semibold text-indigo-500">
-                {departures?.count || 0}
+                {todaysCheckedOut || 0}
               </p>
             </div>
             <div className="flex flex-row items-start justify-between">
@@ -95,7 +102,7 @@ const Analytics: FC<Props> = () => {
                 In Hotel
               </h4>
               <p className="text-3xl font-semibold text-indigo-500">
-                {checkedIn?.length || 0}
+                {totalGuestsResiding || 0}
               </p>
             </div>
             <div className="flex flex-row items-start justify-between">
@@ -103,18 +110,14 @@ const Analytics: FC<Props> = () => {
                 <span className="text-xs block text-zinc-500">Total</span>
                 Available Rooms
               </h4>
-              <p className="text-3xl font-semibold text-indigo-500">
-                {checkedIn?.length || 0}
-              </p>
+              <p className="text-3xl font-semibold text-indigo-500">{0}</p>
             </div>
             <div className="flex flex-row items-start justify-between">
               <h4 className="text-sm font-medium">
                 <span className="text-xs block text-zinc-500">Total</span>
                 Occupied Rooms
               </h4>
-              <p className="text-3xl font-semibold text-indigo-500">
-                {checkedIn.length || 0}
-              </p>
+              <p className="text-3xl font-semibold text-indigo-500">{0}</p>
             </div>
           </div>
         </div>

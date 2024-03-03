@@ -85,17 +85,20 @@ const Report: FC<Props> = () => {
         "Payment Type",
       ],
     ];
-    const tableData = report.map((r) => [
-      r?.folioId,
-      r?.guestName,
-      r?.guestEmail,
-      r?.numberOfGuests,
-      dayjs(r?.from).format("D MMMM YYYY - h:mm a"),
-      dayjs(r?.to).format("D MMMM YYYY - h:mm a"),
-      r?.checkedIn?.primaryGuest?.roomNumber,
-      r?.paymentAmount,
-      r?.paymentMethod,
-    ]);
+    const tableData = report.map((r) => {
+      const primaryGuest = r?.checkedIn?.filter((g) => g.isPrimary)[0];
+      return [
+        r?.folioId,
+        r?.guestName,
+        r?.guestEmail,
+        r?.numberOfGuests,
+        dayjs(r?.from).format("D MMMM YYYY - h:mm a"),
+        dayjs(r?.to).format("D MMMM YYYY - h:mm a"),
+        primaryGuest?.roomNumber,
+        r?.paymentAmount,
+        r?.paymentMethod,
+      ];
+    });
     autoTable(doc, {
       head: tableHeaders,
       /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -172,6 +175,8 @@ const Report: FC<Props> = () => {
     ];
 
     report.forEach((r) => {
+      const primaryGuest = r?.checkedIn?.filter((g) => g.isPrimary)[0];
+
       worksheet.addRow({
         folioId: r?.folioId,
         guestName: r?.guestName,
@@ -179,7 +184,7 @@ const Report: FC<Props> = () => {
         totalGuests: r?.numberOfGuests,
         checkInDate: dayjs(r?.from).format("D MMMM YYYY - h:mm a"),
         checkOutDate: dayjs(r?.to).format("D MMMM YYYY - h:mm a"),
-        roomNo: r?.checkedIn?.primaryGuest?.roomNumber,
+        roomNo: primaryGuest?.roomNumber,
         paymentAmount: r?.paymentAmount,
         paymentType: r?.paymentMethod,
       });
@@ -274,25 +279,28 @@ const Report: FC<Props> = () => {
                 </TableRow>
               )}
               {report &&
-                report.map((r, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{r?.folioId}</TableCell>
-                    <TableCell>{r?.guestName}</TableCell>
-                    <TableCell>{r?.guestEmail}</TableCell>
-                    <TableCell>{r?.numberOfGuests}</TableCell>
-                    <TableCell>
-                      {dayjs(r?.from).format("D MMMM YYYY - h:mm a")}
-                    </TableCell>
-                    <TableCell>
-                      {dayjs(r?.to).format("D MMMM YYYY - h:mm a")}
-                    </TableCell>
-                    <TableCell>
-                      {r?.checkedIn?.primaryGuest?.roomNumber}
-                    </TableCell>
-                    <TableCell>{r?.paymentAmount}</TableCell>
-                    <TableCell>{r?.paymentMethod}</TableCell>
-                  </TableRow>
-                ))}
+                report.map((r, index) => {
+                  const primaryGuest = r?.checkedIn?.filter(
+                    (g) => g.isPrimary
+                  )[0];
+                  return (
+                    <TableRow key={index}>
+                      <TableCell>{r?.folioId}</TableCell>
+                      <TableCell>{r?.guestName}</TableCell>
+                      <TableCell>{r?.guestEmail}</TableCell>
+                      <TableCell>{r?.numberOfGuests}</TableCell>
+                      <TableCell>
+                        {dayjs(r?.from).format("D MMMM YYYY - h:mm a")}
+                      </TableCell>
+                      <TableCell>
+                        {dayjs(r?.to).format("D MMMM YYYY - h:mm a")}
+                      </TableCell>
+                      <TableCell>{primaryGuest?.roomNumber}</TableCell>
+                      <TableCell>{r?.paymentAmount}</TableCell>
+                      <TableCell>{r?.paymentMethod}</TableCell>
+                    </TableRow>
+                  );
+                })}
             </TableBody>
           </Table>
         )}

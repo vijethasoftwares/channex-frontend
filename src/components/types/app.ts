@@ -53,15 +53,15 @@ export interface BookingProps {
   paymentMethod: string;
   primaryGuestName: string;
   checkedIn?: {
-    additionalGuests: {
-      roomNumber: number;
-      guest: GuestDetailsProps;
-    }[];
-    primaryGuest: {
-      roomNumber: number;
-      guest: GuestDetailsProps;
-    };
-  };
+    _id: string;
+    isPrimary: boolean;
+    roomNumber: number;
+    name: string;
+    email: string;
+    phone: string;
+    idProofBackImage: { label: string; url: string };
+    idProofFrontImage: { label: string; url: string };
+  }[];
   guestName?: string;
   guestPhoneNumber: number;
   guestEmail?: string;

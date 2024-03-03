@@ -95,3 +95,26 @@ export function groupBy<T, K extends keyof any>(
   });
   return map;
 }
+
+export function groupByProp<T>(
+  items: T[],
+  keys: (keyof T)[]
+): Array<{ [K in keyof T]?: T[K] } & { data: T[] }> {
+  const groups = items.reduce((result, item) => {
+    const groupKey = keys
+      .map((key) => item[key])
+      .join("-")
+      .replace(/\s/g, "-");
+    if (!result[groupKey]) {
+      result[groupKey] = keys.reduce(
+        (group, key) => ({ ...group, [key]: item[key] }),
+        {} as T & { data: T[] } // Update the type of `result` to include the `data` property
+      );
+      result[groupKey].data = [];
+    }
+    result[groupKey].data.push(item);
+    return result;
+  }, {} as Record<string, T & { data: T[] }>);
+
+  return Object.values(groups);
+}
