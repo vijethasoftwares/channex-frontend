@@ -55,7 +55,7 @@ const CheckIn = () => {
   const { user } = useGlobalContext() as GlobalContextType;
   const { id } = useParams<{ id: string }>();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [loading, setLoading] = useState<boolean>(false);
+  const [, setLoading] = useState<boolean>(false);
   const [updatingBooking, setUpdatingBooking] = useState<boolean>(false);
   const [booking, setBooking] = useState<BookingProps>();
   const [rooms, setRooms] = useState<RoomProps[]>();
