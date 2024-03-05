@@ -10,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { SERVER_URL, useGlobalContext } from "@/lib/utils";
+import { SERVER_URL, cn, useGlobalContext } from "@/lib/utils";
 import {
   Avatar,
   Button,
@@ -21,7 +21,13 @@ import {
   Selection,
 } from "@nextui-org/react";
 import axios, { AxiosError } from "axios";
-import { differenceInCalendarDays, format } from "date-fns";
+import {
+  addMonths,
+  differenceInMonths,
+  endOfMonth,
+  format,
+  startOfMonth,
+} from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
@@ -91,30 +97,47 @@ const AddBooking: FC<Props> = () => {
     string | undefined
   >();
   const [guestEmail, setGuestEmail] = useState<string>();
-  const [date, setDate] = React.useState<DateRange | undefined>();
+  const [checkInMonth, setCheckInMonth] = useState<DateRange | undefined>();
+  const [checkInData, setCheckInData] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+    months: number;
+  }>({
+    from: undefined,
+    to: undefined,
+    months: 0,
+  });
   const [paymentStatus, setPaymentStatus] = useState<Selection>(new Set([]));
-  console.log(date);
-
   const navigate = useNavigate();
 
-  const getDifferenceInMonthsAndDays = (from: Date, to: Date) => {
-    let diffInDays = differenceInCalendarDays(to, from);
-    const diffInMonths = Math.floor(diffInDays / 30);
-    diffInDays = diffInDays % 30;
-
-    let result = "";
-
-    if (diffInMonths > 0) {
-      result += `${diffInMonths} month${diffInMonths > 1 ? "s" : ""}`;
+  const handleSelectCheckInMonth = (range: DateRange) => {
+    console.log(range, "range");
+    if (!range.from || !range.to) {
+      setCheckInData({
+        from: range?.from,
+        to: range.to,
+        months: 0,
+      });
+      setCheckInMonth({ ...range });
+      return;
     }
 
-    if (diffInDays > 0) {
-      result += `${result ? " and " : ""}${diffInDays} day${
-        diffInDays > 1 ? "s" : ""
-      } stay`;
-    }
+    const from: Date = startOfMonth(range.from);
+    const to: Date = endOfMonth(range.to);
 
-    return result || "Same day stay";
+    // Ensure the range spans full months and is not longer than 6 months
+    if (to < addMonths(from, 6) && to >= from) {
+      const months: number = differenceInMonths(to, from) + 1;
+      setCheckInMonth({ from, to });
+      setCheckInData({
+        from: range?.from,
+        to: range?.to,
+        months,
+      });
+    } else {
+      toast.error("Stay duration should be within 6 months only.");
+    }
+    console.log(checkInMonth, "checkinmonth", checkInData, "checkindata");
   };
 
   const handleSubmit = async (
@@ -125,8 +148,8 @@ const AddBooking: FC<Props> = () => {
       !property ||
       !Array.from(roomCategory).toString() ||
       !Array.from(roomType).toString() ||
-      !date?.from ||
-      !date?.to ||
+      !checkInMonth?.from ||
+      !checkInMonth?.to ||
       !Array.from(paymentStatus).toString() ||
       !noOfGuests ||
       !Array.from(bookingType).toString() ||
@@ -143,8 +166,9 @@ const AddBooking: FC<Props> = () => {
       propertyId: Array.from(property).toString(),
       roomCategory: Array.from(roomCategory).toString(),
       roomType: Array.from(roomType).toString(),
-      from: date?.from,
-      to: date?.to,
+      from: checkInMonth?.from,
+      to: checkInMonth?.to,
+      noOfMonths: checkInData?.months,
       paymentStatus: Array.from(paymentStatus).toString(),
       numberOfGuests: parseInt(noOfGuests || "0"),
       paymentAmount: parseInt(paymentAmount || "0"),
@@ -206,7 +230,7 @@ const AddBooking: FC<Props> = () => {
       </ContainerColumn>
       <div className="mt-5 p-5 bg-zinc-50 border rounded-md w-full">
         <Heading variant="subheading">Booking Details</Heading>
-        <div className="mt-5 grid grid-cols-3 gap-5 w-full">
+        <div className="mt-5 grid md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
           <Select
             name="bookingType"
             color="default"
@@ -346,39 +370,29 @@ const AddBooking: FC<Props> = () => {
               </SelectItem>
             ))}
           </Select>
-          <div className={"grid gap-2.5"}>
-            <div className="w-full flex justify-between items-center">
-              <Label className="font-normal">Check In and Check Out</Label>
-              <span className="text-sm">
-                {date?.from &&
-                  date.to &&
-                  getDifferenceInMonthsAndDays(date.from, date.to)}
+          <div className="flex flex-col justify-start items-start gap-2.5 *:w-full">
+            <Label className="font-normal">
+              Check In Month
+              <span className="text-muted-foreground text-tiny font-medium text-zinc-500 ml-2">
+                (Full Months only) & (Max 6 months)
               </span>
-            </div>
+            </Label>
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  id="date"
-                  radius="md"
-                  size="lg"
                   variant="bordered"
-                  className="justify-start"
-                  // variant={"outline"}
-                  // className={cn(
-                  //   "w-[300px] justify-start text-left font-normal",
-                  //   !date && "text-muted-foreground"
-                  // )}
+                  className={cn(
+                    "justify-start text-left font-normal py-3 h-auto",
+                    !checkInMonth && "text-muted-foreground"
+                  )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date?.from ? (
-                    date.to ? (
-                      <>
-                        {format(date.from, "LLL dd, y")} -{" "}
-                        {format(date.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(date.from, "LLL dd, y")
-                    )
+                  <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                  {checkInMonth && checkInMonth.from && checkInMonth.to ? (
+                    <>
+                      {format(checkInMonth?.from, "LLL dd, y")} -
+                      {format(checkInMonth?.to, "LLL dd, y")}
+                    </>
                   ) : (
                     <span>Pick a date</span>
                   )}
@@ -388,14 +402,23 @@ const AddBooking: FC<Props> = () => {
                 <Calendar
                   initialFocus
                   mode="range"
-                  defaultMonth={date?.from}
-                  selected={date}
-                  onSelect={setDate}
+                  defaultMonth={checkInMonth?.from}
+                  selected={checkInMonth}
+                  onSelect={(range?: DateRange) =>
+                    handleSelectCheckInMonth(range as DateRange)
+                  }
                   numberOfMonths={2}
                 />
               </PopoverContent>
             </Popover>
+            {checkInData?.months > 0 && (
+              <p className="w-full text-right text-muted-foreground text-tiny font-medium text-zinc-500">
+                {checkInData?.months}{" "}
+                {checkInData?.months === 1 ? "month" : "months"}
+              </p>
+            )}
           </div>
+
           <Select
             name="paymentStatus"
             color="default"
@@ -463,7 +486,7 @@ const AddBooking: FC<Props> = () => {
       )}
       <div className="mt-5 p-5 bg-zinc-50 border rounded-md w-full">
         <Heading variant="subheading">Guest Details</Heading>
-        <div className="mt-5 grid grid-cols-3 gap-5 w-full">
+        <div className="md:mt-10 lg:mt-5 grid md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
           <Input
             type="text"
             name="primaryGuestName"
@@ -477,6 +500,7 @@ const AddBooking: FC<Props> = () => {
             radius="md"
             size="lg"
             variant="bordered"
+            className="w-full"
           />
           <Input
             onWheel={(e) => e.currentTarget.blur()}
@@ -492,6 +516,7 @@ const AddBooking: FC<Props> = () => {
             radius="md"
             size="lg"
             variant="bordered"
+            className="w-full"
           />
           <Input
             type="email"
@@ -506,6 +531,7 @@ const AddBooking: FC<Props> = () => {
             radius="md"
             size="lg"
             variant="bordered"
+            className="w-full"
           />
           <div className="col-span-3 flex justify-end items-center py-5">
             <ShadcnButton

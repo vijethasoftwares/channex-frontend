@@ -1,5 +1,6 @@
 import { GlobalContext } from "@/components/providers";
 import { clsx, type ClassValue } from "clsx";
+import { differenceInCalendarDays } from "date-fns";
 import { useContext } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -96,7 +97,7 @@ export function groupBy<T, K extends keyof any>(
   return map;
 }
 
-export function groupByProp<T>(
+export function groupByProperties<T>(
   items: T[],
   keys: (keyof T)[]
 ): Array<{ [K in keyof T]?: T[K] } & { data: T[] }> {
@@ -118,3 +119,23 @@ export function groupByProp<T>(
 
   return Object.values(groups);
 }
+
+export const getDifferenceInMonthsAndDays = (from: Date, to: Date) => {
+  let diffInDays = differenceInCalendarDays(to, from);
+  const diffInMonths = Math.floor(diffInDays / 30);
+  diffInDays = diffInDays % 30;
+
+  let result = "";
+
+  if (diffInMonths > 0) {
+    result += `${diffInMonths} month${diffInMonths > 1 ? "s" : ""}`;
+  }
+
+  if (diffInDays > 0) {
+    result += `${result ? " and " : ""}${diffInDays} day${
+      diffInDays > 1 ? "s" : ""
+    } stay`;
+  }
+
+  return result || "Same day stay";
+};

@@ -52,7 +52,7 @@ interface GuestProps {
 }
 
 const CheckIn = () => {
-  const { user } = useGlobalContext() as GlobalContextType;
+  const { user, selectedProperty } = useGlobalContext() as GlobalContextType;
   const { id } = useParams<{ id: string }>();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [, setLoading] = useState<boolean>(false);
@@ -95,6 +95,9 @@ const CheckIn = () => {
             name: data.booking.guestName,
             email: data.booking.guestEmail,
             phone: data.booking.guestPhoneNumber.toString(),
+            dob: "",
+            idProofBackImage: { label: "", url: "" },
+            idProofFrontImage: { label: "", url: "" },
           },
         ]);
         // console.log(data);
@@ -148,9 +151,11 @@ const CheckIn = () => {
       numberOfGuest: Number(noOfGuests),
       from: checkInDate,
       to: checkOutDate,
-      roomCategory: Array.from(roomCategory).toString(),
-      roomType: Array.from(roomType).toString(),
       checkedIn: guests,
+      folioId: booking?.folioId,
+      selectedProperty,
+      roomType: booking?.roomType,
+      roomCategory: booking?.roomCategory,
     };
     console.log(data, "data");
     try {
@@ -427,6 +432,7 @@ const CheckIn = () => {
                                     vacancy={room.vacancy}
                                     noOfGuests={parseInt(noOfGuests || "0")}
                                     propertyId={booking?.propertyId}
+                                    maxOccupancy={room.maxOccupancy}
                                   />
                                 </div>
                               );
@@ -443,6 +449,7 @@ const CheckIn = () => {
                               vacancy={room.vacancy}
                               noOfGuests={parseInt(noOfGuests || "0")}
                               propertyId={booking?.propertyId}
+                              maxOccupancy={room.maxOccupancy}
                             />
                           </div>
                         )}
@@ -458,6 +465,7 @@ const CheckIn = () => {
                               vacancy={room.vacancy}
                               noOfGuests={parseInt(noOfGuests || "0")}
                               propertyId={booking?.propertyId}
+                              maxOccupancy={room.maxOccupancy}
                             />
                           </div>
                         )}
@@ -491,6 +499,7 @@ interface GuestFormProps {
   vacancy: number;
   noOfGuests: number;
   propertyId: string | undefined;
+  maxOccupancy: number;
 }
 
 const PrimaryGuestForm: React.FC<GuestFormProps> = ({
@@ -619,7 +628,8 @@ const PrimaryGuestForm: React.FC<GuestFormProps> = ({
         color="default"
         isRequired={true}
         value={tempGuest.email}
-        onValueChange={(email) => setTempGuest({ ...tempGuest, email })}
+        // onValueChange={(email) => setTempGuest({ ...tempGuest, email })}
+        isDisabled={true}
         radius="md"
         size="lg"
         variant="bordered"
@@ -633,10 +643,10 @@ const PrimaryGuestForm: React.FC<GuestFormProps> = ({
         color="default"
         isRequired={true}
         value={tempGuest.phone}
-        onValueChange={(phone) => setTempGuest({ ...tempGuest, phone })}
         radius="md"
         size="lg"
         variant="bordered"
+        isDisabled={true}
       />
       <Input
         type="date"
@@ -711,6 +721,7 @@ const GuestForm: React.FC<GuestFormProps> = ({
   setGuests,
   roomNumber,
   noOfGuests,
+  maxOccupancy,
   // propertyId,
 }) => {
   const [tempGuest, setTempGuest] = useState<GuestProps>({
@@ -780,6 +791,16 @@ const GuestForm: React.FC<GuestFormProps> = ({
       }
       if (!tempGuest.dob) {
         toast.error("Date of Birth is required");
+        return;
+      }
+      const findPrimaryGuest = guests.find((g) => g.isPrimary);
+      if (!findPrimaryGuest?.roomNumber) {
+        toast.error("Please assign primary guest first");
+        return;
+      }
+      const guestByRooms = guests.filter((g) => g.roomNumber === roomNumber);
+      if (guestByRooms.length >= maxOccupancy) {
+        toast.error("Room is already full");
         return;
       }
       // if(!tempGuest.idProofFrontImage?.url){

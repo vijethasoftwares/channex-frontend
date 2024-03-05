@@ -242,6 +242,7 @@ const AllBooking: FC<Props> = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>ID</TableHead>
                         <TableHead>Guest</TableHead>
                         <TableHead>Pax</TableHead>
                         <TableHead>Booking Type</TableHead>
@@ -269,6 +270,7 @@ const AllBooking: FC<Props> = () => {
                         filteredBooking.map((booking) => {
                           return (
                             <TableRow key={booking?._id}>
+                              <TableCell>{booking?.folioId}</TableCell>
                               <TableCell>{booking?.guestName}</TableCell>
                               <TableCell>{booking?.numberOfGuests}</TableCell>
                               <TableCell>{booking?.bookingType}</TableCell>
@@ -332,6 +334,7 @@ const AllBooking: FC<Props> = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>ID</TableHead>
                         <TableHead>Guest</TableHead>
                         <TableHead>Pax</TableHead>
                         <TableHead>Booking Type</TableHead>
@@ -359,6 +362,7 @@ const AllBooking: FC<Props> = () => {
                         filteredUpcomingBooking.map((booking) => {
                           return (
                             <TableRow key={booking?._id}>
+                              <TableCell>{booking?.folioId}</TableCell>
                               <TableCell>{booking?.guestName}</TableCell>
                               <TableCell>{booking?.numberOfGuests}</TableCell>
                               <TableCell>{booking?.bookingType}</TableCell>
