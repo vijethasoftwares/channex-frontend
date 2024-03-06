@@ -341,7 +341,8 @@ const CheckIn = () => {
                   />
                   <div className="flex flex-col">
                     <span className="text-small">
-                      {p?.roomNumber} - (vacancy: {p?.vacancy})
+                      {p?.roomNumber} - (vacancy:{" "}
+                      {p?.maxOccupancy - p?.guests.length})
                     </span>
                     <span className="text-tiny text-default-400">
                       {p?.description}
@@ -410,7 +411,9 @@ const CheckIn = () => {
                 return room ? (
                   <Tab
                     key={item}
-                    title={`Room ${room.roomNumber} (Max Occupancy: ${room.vacancy})`}
+                    title={`Room ${room.roomNumber} (Max Occupancy: ${
+                      room?.maxOccupancy - room?.guests.length
+                    })`}
                     className="w-full"
                   >
                     <Card className="p-2.5">
@@ -429,7 +432,9 @@ const CheckIn = () => {
                                     guests={guests}
                                     setGuests={setGuests}
                                     roomNumber={room.roomNumber}
-                                    vacancy={room.vacancy}
+                                    vacancy={
+                                      room?.maxOccupancy - room?.guests.length
+                                    }
                                     noOfGuests={parseInt(noOfGuests || "0")}
                                     propertyId={booking?.propertyId}
                                     maxOccupancy={room.maxOccupancy}
@@ -446,7 +451,7 @@ const CheckIn = () => {
                               guests={guests}
                               setGuests={setGuests}
                               roomNumber={room.roomNumber}
-                              vacancy={room.vacancy}
+                              vacancy={room?.maxOccupancy - room?.guests.length}
                               noOfGuests={parseInt(noOfGuests || "0")}
                               propertyId={booking?.propertyId}
                               maxOccupancy={room.maxOccupancy}
@@ -462,7 +467,7 @@ const CheckIn = () => {
                               guests={guests}
                               setGuests={setGuests}
                               roomNumber={room.roomNumber}
-                              vacancy={room.vacancy}
+                              vacancy={room?.maxOccupancy - room?.guests.length}
                               noOfGuests={parseInt(noOfGuests || "0")}
                               propertyId={booking?.propertyId}
                               maxOccupancy={room.maxOccupancy}

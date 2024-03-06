@@ -102,25 +102,6 @@ const storage = getStorage(firebase_app);
 
 const AddRoom: FC<Props> = () => {
   const { user } = useGlobalContext() as GlobalContextType;
-  /**
-   * 1. Room Number
-   * 2. Property
-   * 3. Room Category
-   * 4. Room Type
-   * 5. Room Size
-   * 6. Max Occupancy
-   * 7. Room Price (per month)
-   * 8. Room Price (per day)
-   * 9. Room Images
-   * 10. Room Facilities
-   * 11. Room Description
-   * 12. Room Status
-   * 13. Room Availability
-   * 14. Room Bookings
-   * 15. Room Reviews
-   * 16. Room Ratings
-   **/
-
   const [roomNumber, setRoomNumber] = useState<string | undefined>("");
   const [property, setProperty] = useState<Selection>(new Set([]));
   const [userProperties, setUserProperties] = useState<PropertyProps[]>();
@@ -279,7 +260,7 @@ const AddRoom: FC<Props> = () => {
   useEffect(() => {
     const fetchUserProperties = async () => {
       try {
-        const res = await axios.get(SERVER_URL + "/owner/get-all-properties", {
+        const res = await axios.get(SERVER_URL + "/owner/get-my-properties", {
           headers: {
             Authorization: `Bearer ${user?.token}`,
           },

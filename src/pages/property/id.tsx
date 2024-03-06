@@ -97,7 +97,7 @@ const PropertyById: FC<Props> = () => {
       const guestPerRoom = groupBy(rooms, (room) => room.roomType);
       console.log(guestPerRoom);
       for (const room of rooms) {
-        const noOfGuest = room.maxOccupancy - room.vacancy;
+        const noOfGuest = room.guests.length;
         totalOccupancy += room.maxOccupancy;
         totalNoOfGuests += noOfGuest;
       }
