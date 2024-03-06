@@ -41,6 +41,10 @@ const DashboardLinks = [
     title: "Users",
     link: "/dashboard/users",
   },
+  {
+    title: "KSR",
+    link: "/dashboard/ksr/inventory",
+  },
 ];
 
 const RoomsLinks = [

@@ -3,7 +3,7 @@ import ContainerBetween from "@/components/container-between";
 import ContainerColumn from "@/components/container-column";
 import Heading from "@/components/heading";
 import { GlobalContextType } from "@/components/providers";
-import { BookingProps, PropertyProps } from "@/components/types/app";
+import { BookingProps } from "@/components/types/app";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,15 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SERVER_URL, useGlobalContext } from "@/lib/utils";
-import {
-  Card,
-  CardBody,
-  Input,
-  Select,
-  SelectItem,
-  Tab,
-  Tabs,
-} from "@nextui-org/react";
+import { Card, CardBody, Input, Spinner, Tab, Tabs } from "@nextui-org/react";
 import axios, { AxiosError } from "axios";
 import dayjs from "dayjs";
 import { CheckSquare2, Eye, Loader2, Trash } from "lucide-react";
@@ -43,14 +35,13 @@ const BookingTabsEnum = Object.freeze({
 });
 
 const AllBooking: FC<Props> = () => {
-  const { user } = useGlobalContext() as GlobalContextType;
+  const { user, selectedProperty, isPropertyLoading } =
+    useGlobalContext() as GlobalContextType;
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [selected, setSelected] = useState<number | string>(
     BookingTabsEnum.CURRENT.replace(" ", "-").toLowerCase()
   );
-  // const [search, setSearch] = useState<string>("");
-  const [userProperties, setUserProperties] = useState<PropertyProps[]>();
   // const [selectedProperty, setSelectedProperty] = useState<PropertyProps>();
   const [booking, setBooking] = useState<BookingProps[]>([]);
   const [filteredBooking, setFilteredBooking] = useState<BookingProps[]>([]);
@@ -63,20 +54,19 @@ const AllBooking: FC<Props> = () => {
   const [filteredBookingHistory, setFilteredBookingHistory] = useState<
     BookingProps[]
   >([]);
-  const [selectedProperty, setSelectedProperty] = useState<string>("");
 
   const fetchBookingsByProperty = async (id: string) => {
     setIsLoading(true);
     try {
-      const res = await axios.get(
-        SERVER_URL + "/manager/getAllBookings/" + id,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-          },
-        }
-      );
-      const data = (await res.data) as { bookings: BookingProps[] };
+      const res = await axios.get(SERVER_URL + "/manager/get-bookings/" + id, {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      });
+      const data = (await res.data) as {
+        bookings: BookingProps[];
+        message: string;
+      };
       const current = data.bookings.filter(
         (booking: BookingProps) =>
           booking.isCheckedIn === true && booking.isCheckedOut === false
@@ -96,6 +86,7 @@ const AllBooking: FC<Props> = () => {
       setFilteredBooking(current);
       setFilteredUpcomingBooking(upcoming);
       setFilteredBookingHistory(history);
+      toast.success(data?.message);
       console.log(data);
     } catch (error) {
       console.log(error);
@@ -125,31 +116,9 @@ const AllBooking: FC<Props> = () => {
     setFilteredBookingHistory(filtered);
   };
 
-  const handleSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // e.preventDefault();
-    setSelectedProperty(e.target.value);
-  };
-
   useEffect(() => {
     console.log(selected);
   }, [selected]);
-
-  const fetchUserProperties = async () => {
-    try {
-      const res = await axios.get(SERVER_URL + "/owner/get-my-properties", {
-        headers: {
-          Authorization: `Bearer ${user?.token}`,
-        },
-      });
-      const data = await res.data;
-      console.log(data.properties);
-      setUserProperties(data.properties);
-      // setFilteredProperties(data.properties);
-      setSelectedProperty(data.properties[0]._id);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   useEffect(() => {
     if (user && selectedProperty.length > 3) {
@@ -158,40 +127,24 @@ const AllBooking: FC<Props> = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedProperty]);
 
-  useEffect(() => {
-    if (user) {
-      fetchUserProperties();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  if (isPropertyLoading) {
+    return (
+      <div className="flex justify-center items-center px-5 py-10 w-full">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
   return (
     <Container>
       <ContainerColumn>
         <ContainerBetween>
           <Heading>All Booking</Heading>
-          <div className="flex justify-end flex-1 items-end gap-5">
-            <Select
-              items={userProperties || []}
-              label="Select Property to view rooms"
-              labelPlacement="outside"
-              placeholder="Select Property"
-              variant="bordered"
-              selectedKeys={[selectedProperty]}
-              onChange={handleSelectionChange}
-              className="max-w-[15rem]"
-            >
-              {(property) => (
-                <SelectItem key={property._id?.toString() || ""}>
-                  {property.name}
-                </SelectItem>
-              )}
-            </Select>
-            <Link to={"add"}>
-              <Button className="active:scale-95 bg-purple-700">
-                + add booking
-              </Button>
-            </Link>
-          </div>
+          <Link to={"add"}>
+            <Button className="active:scale-95 bg-purple-700">
+              + add booking
+            </Button>
+          </Link>
         </ContainerBetween>
 
         {/* </div> */}

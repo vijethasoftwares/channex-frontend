@@ -4,12 +4,12 @@ import ContainerColumn from "@/components/container-column";
 import Heading from "@/components/heading";
 import { GlobalContextType } from "@/components/providers";
 import RoomCard from "@/components/room-card";
-import { PropertyProps, RoomProps } from "@/components/types/app";
+import { RoomProps } from "@/components/types/app";
 import { Button } from "@/components/ui/button";
 import { SERVER_URL, useGlobalContext } from "@/lib/utils";
-import { Input, Select, SelectItem, Spinner } from "@nextui-org/react";
+import { Input, Spinner } from "@nextui-org/react";
 import axios from "axios";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -20,14 +20,12 @@ type Props = {
 };
 
 const AllRooms: FC<Props> = () => {
-  const { user } = useGlobalContext() as GlobalContextType;
+  const { user, selectedProperty, isPropertyLoading } =
+    useGlobalContext() as GlobalContextType;
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isPropertyLoading, setIsPropertyLoading] = useState<boolean>(false);
   const [rooms, setRooms] = useState<RoomProps[]>([]);
   const [filteredRooms, setFilteredRooms] = useState<RoomProps[]>();
-  const [userProperties, setUserProperties] = useState<PropertyProps[]>();
-  const [selectedProperty, setSelectedProperty] = useState<string>("");
 
   const fetchRoomsByProperty = async (propertyId: string) => {
     try {
@@ -53,42 +51,12 @@ const AllRooms: FC<Props> = () => {
     }
   };
 
-  const fetchUserProperties = async () => {
-    try {
-      setIsPropertyLoading(true);
-      const res = await axios.get(SERVER_URL + "/owner/get-my-properties", {
-        headers: {
-          Authorization: `Bearer ${user?.token}`,
-        },
-      });
-      const data = await res.data;
-      setUserProperties(data.properties);
-      setSelectedProperty(data.properties[0]._id);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsPropertyLoading(false);
-    }
-  };
-
-  const handleSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // e.preventDefault();
-    setSelectedProperty(e.target.value);
-  };
-
   useEffect(() => {
     if (user && selectedProperty.length > 3) {
       fetchRoomsByProperty(selectedProperty);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedProperty]);
-
-  useEffect(() => {
-    if (user) {
-      fetchUserProperties();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   if (isPropertyLoading) {
     return (
@@ -102,29 +70,11 @@ const AllRooms: FC<Props> = () => {
       <ContainerColumn>
         <ContainerBetween>
           <Heading>All Rooms</Heading>
-          <div className="flex justify-end flex-1 items-end gap-5">
-            <Select
-              items={userProperties || []}
-              label="Select Property to view rooms"
-              labelPlacement="outside"
-              placeholder="Select Property"
-              variant="bordered"
-              selectedKeys={[selectedProperty]}
-              onChange={handleSelectionChange}
-              className="max-w-[15rem]"
-            >
-              {(property) => (
-                <SelectItem key={property._id?.toString() || ""}>
-                  {property.name}
-                </SelectItem>
-              )}
-            </Select>
-            <Link to={"add"}>
-              <Button className="active:scale-95 bg-purple-700">
-                + Add Room
-              </Button>
-            </Link>
-          </div>
+          <Link to={"add"}>
+            <Button className="active:scale-95 bg-purple-700">
+              + Add Room
+            </Button>
+          </Link>
         </ContainerBetween>
         <Heading variant="subtitle">Search or select a room</Heading>
         <Input
@@ -155,25 +105,19 @@ const AllRooms: FC<Props> = () => {
             </Heading>
           </div>
         )}
-        <AnimatePresence>
-          {" "}
-          <motion.div
-            layout
-            className="flex flex-col *:w-full justify-start items-start gap-5"
-          >
-            {filteredRooms &&
-              selectedProperty &&
-              filteredRooms.map((room) => {
-                return (
-                  <RoomCard
-                    id={selectedProperty}
-                    fetchData={fetchRoomsByProperty}
-                    data={room}
-                  />
-                );
-              })}
-          </motion.div>
-        </AnimatePresence>
+        <motion.div className="flex flex-col *:w-full justify-start items-start gap-5">
+          {filteredRooms &&
+            selectedProperty &&
+            filteredRooms.map((room) => {
+              return (
+                <RoomCard
+                  id={selectedProperty}
+                  fetchData={fetchRoomsByProperty}
+                  data={room}
+                />
+              );
+            })}
+        </motion.div>
       </ContainerColumn>
     </Container>
   );

@@ -86,10 +86,20 @@ export interface RoomProps {
   roomSize: number;
   pricePerMonth?: number;
   maxOccupancy: number;
-  vacancy: number;
   description?: string;
   propertyId: string;
-  guestDetails: GuestDetailsProps[];
+  propertyType?: string;
+  guests: {
+    _id: string;
+    bookingId: string;
+    folioId: string;
+    isPrimary: boolean;
+    name: string;
+    email: string;
+    phone: string;
+    idProofBackImage: { label: string; url: string };
+    idProofFrontImage: { label: string; url: string };
+  }[];
   pricePerDay?: number;
   images: ImagesProps;
   facilities?: string[];
@@ -144,4 +154,15 @@ export interface ReviewProps {
   rating: number;
   review: string;
   createdAt?: Date;
+}
+
+export interface FoodMenuCategory {
+  name: string;
+  items: FoodMenuItem[];
+}
+
+export interface FoodMenuItem {
+  name: string;
+  price: number;
+  quantity: number;
 }

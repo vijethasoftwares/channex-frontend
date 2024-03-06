@@ -69,7 +69,7 @@ const RoomCard: FC<Props> = ({ data, id, fetchData }) => {
   return (
     <motion.div
       layout="position"
-      className="relative w-full flex flex-col lg:flex-row items-stretch justify-start p-2.5 border rounded-xl gap-2.5 bg-white"
+      className="relative w-full flex flex-col lg:flex-row items-stretch justify-start p-2.5 border rounded-2xl gap-2.5 bg-white shadow-md"
     >
       <div className="w-full lg:w-2/6 flex flex-col gap-2.5">
         <div className="w-full bg-zinc-50 rounded-md flex">
@@ -156,9 +156,9 @@ const RoomCard: FC<Props> = ({ data, id, fetchData }) => {
               <Badge className="py-1.5" variant={"outline"}>
                 Max Occupancy: {data?.maxOccupancy}
               </Badge>
-              {data?.vacancy && (
+              {data?.guests?.length && (
                 <Badge className="py-1.5" variant={"outline"}>
-                  Vacant Beds: {data?.vacancy}
+                  Vacant Beds: {data?.maxOccupancy - data?.guests?.length}
                 </Badge>
               )}
             </div>
@@ -167,9 +167,9 @@ const RoomCard: FC<Props> = ({ data, id, fetchData }) => {
       </div>
       <div className=" rounded-lg flex items-end justify-end">
         <div className="flex flex-col justify-end items-start gap-2.5 h-full w-full">
-          <div className="px-4 py-3 bg-zinc-50 flex flex-col justify-end items-start gap-2.5">
-            <span className="text-xs font-semibold">Price:</span>
-            <span className="text-lg font-semibold">
+          <div className="px-4 py-3 flex flex-col justify-end items-start gap-2.5">
+            <span className="text-sm font-semibold">Price:</span>
+            <span className="text-xl font-semibold">
               {data?.pricePerMonth
                 ? `₹${data?.pricePerMonth}/month`
                 : `₹${data?.pricePerDay}/day`}

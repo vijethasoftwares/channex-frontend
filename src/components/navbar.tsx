@@ -73,8 +73,6 @@ const NavbarComp: FC<Props> = () => {
     }
   };
 
-  console.log(user);
-
   useEffect(() => {
     if (user) {
       fetchUserProperties();

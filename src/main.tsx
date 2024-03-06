@@ -20,6 +20,8 @@ import Guests from "./pages/dashboard/guests.tsx";
 import Report from "./pages/dashboard/report.tsx";
 import Users from "./pages/dashboard/users.tsx";
 import ErrorPage from "./pages/error/index.tsx";
+import CreateOrder from "./pages/ksr/create-order.tsx";
+import Inventory from "./pages/ksr/inventory.tsx";
 import Pricing from "./pages/pricing/index.tsx";
 import AddProperty from "./pages/property/add.tsx";
 import AllProperties from "./pages/property/all.tsx";
@@ -64,6 +66,19 @@ const router = createBrowserRouter([
           {
             path: "users",
             element: <Users />,
+          },
+          {
+            path: "ksr",
+            children: [
+              {
+                path: "inventory",
+                element: <Inventory />,
+              },
+              {
+                path: "create-orders",
+                element: <CreateOrder />,
+              },
+            ],
           },
         ],
       },

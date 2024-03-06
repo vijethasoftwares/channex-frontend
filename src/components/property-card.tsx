@@ -58,7 +58,7 @@ const PropertyCard: FC<Props> = ({ data, fetchData }) => {
   };
 
   return (
-    <div className="relative w-full flex flex-col lg:flex-row items-stretch justify-start p-2.5 border rounded-2xl gap-2.5">
+    <div className="relative w-full flex flex-col lg:flex-row items-stretch justify-start p-2.5 border rounded-2xl gap-2.5 shadow-md">
       <div className="w-full lg:w-2/6 flex flex-col">
         <div className="w-full bg-zinc-50 rounded-md flex">
           <Avatar className="w-full h-48 rounded-xl">
@@ -136,7 +136,7 @@ const PropertyCard: FC<Props> = ({ data, fetchData }) => {
       </div>
       <div className="ounded-lg flex items-end justify-end">
         <div className="flex flex-col justify-end items-start gap-2.5 h-full w-full">
-          <div className="flex flex-col justify-end items-start gap-2.5 px-4 py-3 bg-zinc-50">
+          <div className="flex flex-col justify-end items-start gap-2.5 px-4 py-3">
             <span className="text-sm font-semibold">Manager Details</span>
 
             <span className="text-xs font-semibold text-zinc-700">
