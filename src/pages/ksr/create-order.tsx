@@ -5,6 +5,8 @@ import { Button, Select, SelectItem, Selection } from "@nextui-org/react";
 import axios, { AxiosError } from "axios";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { FC, useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { Addons } from "./const";
 
 interface FoodMenuCategory {
   name: string;
@@ -75,18 +77,74 @@ const CreateOrder = () => {
     }
   }, [user, selectedProperty]);
 
+  const handlePlaceOrder = async () => {
+    const room = roomDetails?.find(
+      (room) =>
+        room.roomNumber.toString() === Array.from(selectedRoom).toString()
+    );
+    const guest = room?.guests.find(
+      (guest) =>
+        guest.folioId.toString() === Array.from(selectedGuest).toString()
+    );
+    if (Array.from(selectedRoom).toString().length === 0) {
+      toast.error("Please select a room");
+      return;
+    }
+    if (Array.from(selectedGuest).toString().length === 0) {
+      toast.error("Please select a guest");
+      return;
+    }
+    if (orderedItems.length === 0) {
+      toast.error("Please order something");
+      return;
+    }
+    if (!user) {
+      toast.error("Please login to place an order");
+      return;
+    }
+    if (!selectedProperty) {
+      toast.error("Please select a property to place an order");
+      return;
+    }
+    try {
+      const res = await axios.post(
+        SERVER_URL + `/manager/ksr/order`,
+        {
+          propertyId: selectedProperty,
+          bookingId: guest?.bookingId,
+          guestFolioId: guest?.folioId,
+          guestName: guest?.name,
+          roomNumber: room?.roomNumber,
+          addonType: Addons.FOOD,
+          total,
+          cgst,
+          sgst,
+          grandTotal,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
+        }
+      );
+      console.log(res.data);
+      toast.success(res.data?.message || "Order Placed Successfully");
+    } catch (error) {
+      const err = error as AxiosError & {
+        response: { data: { message: string } };
+      };
+      console.log(err?.response?.data?.message);
+      toast.error(err?.response?.data?.message);
+    }
+  };
+
   useEffect(() => {
     const orderedItems = categories.flatMap((category) => {
       return category.items.filter((item) => item.order_quantity > 0);
     });
+    setOrderedItems(orderedItems);
     console.log(orderedItems, "orderedItems");
-    if (orderedItems.length > 0) {
-      setOrderedItems(orderedItems);
-    }
-    // console.log(orderedItems, "orderedItems");
   }, [categories]);
-
-  console.log(selectedGuest, "selectedGuest");
 
   useEffect(() => {
     setGuests(
@@ -125,7 +183,7 @@ const CreateOrder = () => {
           );
         })}
       </div>
-      <div className="w-[350px] h-full p-3 flex flex-col justify-between items-start *:w-full gap-2.5">
+      <div className="w-[350px] h-full min-h-[80vh] p-3 flex flex-col justify-between items-start *:w-full gap-2.5">
         <div className="flex flex-col justify-start items-start *:w-full gap-2.5">
           {" "}
           <Select
@@ -166,48 +224,75 @@ const CreateOrder = () => {
               size="lg"
               variant="bordered"
             >
-              {guests?.guests.map((guest, i) => {
+              {guests?.guests.map((guest) => {
                 return (
-                  <SelectItem key={i} value={guest.folioId}>
+                  <SelectItem
+                    key={guest.folioId.toString()}
+                    value={guest.folioId.toString()}
+                  >
                     {guest.name}
                   </SelectItem>
                 );
               })}
             </Select>
           )}
-          <h3 className="font-semibold text-xl font-sora">Items Ordered</h3>
-          <div className="flex flex-col *:w-full divide-y">
-            {orderedItems?.map((item, i) => {
-              return (
-                <div
-                  key={i}
-                  className="flex items-center justify-start *:text-left py-2"
-                >
-                  <h4 className="text-sm font-medium flex-1">{item.name}</h4>
-                  <h4 className="ml-5 text-sm">X {item.order_quantity}</h4>
-                  <h4 className="ml-5 text-sm">
-                    ₹{item.price * item.order_quantity}
-                  </h4>
-                </div>
-              );
-            })}
+          {orderedItems && orderedItems.length > 0 && (
+            <div className="mt-2.5">
+              <h3 className="font-semibold text-base font-sora">
+                Items Ordered
+              </h3>
+              <div className="flex flex-col *:w-full divide-y">
+                {orderedItems &&
+                  orderedItems?.map((item, i) => {
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center justify-start *:text-left py-2"
+                      >
+                        <h4 className="text-sm font-medium flex-1">
+                          {item.name}
+                        </h4>
+                        <h4 className="ml-5 text-sm">
+                          X {item.order_quantity}
+                        </h4>
+                        <h4 className="ml-5 text-sm">
+                          ₹{item.price * item.order_quantity}
+                        </h4>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col *:w-full gap-2.5">
+          <div className="divide-y">
+            {" "}
+            <div className="flex justify-between items-center w-full py-2 text-zinc-500">
+              <h4 className="font-semibold text-sm">Total</h4>
+              <h4 className="font-semibold text-sm">₹{total}</h4>
+            </div>
+            <div className="flex justify-between items-center w-full py-2 text-zinc-500">
+              <h4 className="font-medium text-sm">CGST(9%)</h4>
+              <h4 className="font-medium text-sm">₹{cgst}</h4>
+            </div>
+            <div className="flex justify-between items-center w-full py-2 text-zinc-500">
+              <h4 className="font-medium text-sm">SGST(9%)</h4>
+              <h4 className="font-medium text-sm">₹{sgst}</h4>
+            </div>
+            <div className="flex justify-between items-center w-full py-2">
+              <h4 className="font-medium text-sm">Grand Total</h4>
+              <h4 className="font-medium text-sm">₹{grandTotal}</h4>
+            </div>
           </div>
-        </div>
-        <div className="flex justify-between items-center w-full">
-          <h4 className="font-semibold text-sm">Total</h4>
-          <h4 className="font-semibold text-sm">₹{total}</h4>
-        </div>
-        <div className="flex justify-between items-center w-full">
-          <h4 className="font-medium text-sm">CGST(9%)</h4>
-          <h4 className="font-medium text-sm">₹{cgst}</h4>
-        </div>
-        <div className="flex justify-between items-center w-full">
-          <h4 className="font-medium text-sm">SGST(9%)</h4>
-          <h4 className="font-medium text-sm">₹{sgst}</h4>
-        </div>
-        <div className="flex justify-between items-center w-full">
-          <h4 className="font-medium text-sm">Grand Total</h4>
-          <h4 className="font-medium text-sm">₹{grandTotal}</h4>
+          <Button
+            variant="solid"
+            color="primary"
+            radius="lg"
+            onPress={handlePlaceOrder}
+          >
+            Place Order
+          </Button>
         </div>
       </div>
     </Container>
@@ -297,7 +382,7 @@ const InventoryItem: FC<CategoryProps> = ({
                           return prev + item.price * 0.09;
                         });
                         setGrandTotal((prev) => {
-                          return prev + item.price * 0.18;
+                          return prev + item.price * 0.18 + item.price;
                         });
                       }}
                     >
@@ -331,7 +416,7 @@ const InventoryItem: FC<CategoryProps> = ({
                           return prev - item.price * 0.09;
                         });
                         setGrandTotal((prev) => {
-                          return prev - item.price * 0.18;
+                          return prev - item.price * 0.18 - item.price;
                         });
                       }}
                     >
