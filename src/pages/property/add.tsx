@@ -143,7 +143,9 @@ const AddProperty: FC<Props> = () => {
   const [fetchingNearbyPlaces, setFetchingNearbyPlaces] =
     useState<boolean>(false);
   const [name, setName] = useState<string>("");
-  const [propertyType, setPropertyType] = useState<Selection>(new Set([]));
+  const [propertyType, setPropertyType] = useState<Selection>(
+    new Set([PropertyTypeEnum[0]])
+  );
   const [coupleFriendly, setCoupleFriendly] = useState<boolean>(false);
   const [images, setImages] = useState<{ label: string; url: string }[]>([]);
   const [permissions, setPermissions] = useState<Selection>(new Set([]));
@@ -630,6 +632,7 @@ const AddProperty: FC<Props> = () => {
                 placeholder="Select property type"
                 selectedKeys={propertyType}
                 onSelectionChange={setPropertyType}
+                isDisabled
                 radius="md"
                 size="lg"
                 variant="bordered"

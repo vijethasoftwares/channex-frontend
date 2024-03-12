@@ -123,9 +123,6 @@ const AddRoom: FC<Props> = () => {
   const [roomPricePerMonth, setRoomPricePerMonth] = useState<
     string | undefined
   >("");
-  const [roomPricePerDay, setRoomPricePerDay] = useState<string | undefined>(
-    ""
-  );
   const [images, setImages] = useState<ImagesProps>({
     roomImage: [],
     washroomImage: [],
@@ -232,7 +229,6 @@ const AddRoom: FC<Props> = () => {
       propertyId: p,
       propertyType: selectedProperty?.type,
       guestDetails,
-      roomPricePerDay: parseInt(roomPricePerDay || "0"),
       images,
       roomFacilities: rf,
     };
@@ -432,26 +428,7 @@ const AddRoom: FC<Props> = () => {
             size="lg"
             variant="bordered"
           />
-          <Input
-            type="number"
-            onWheel={(e) => e.currentTarget.blur()}
-            name="roomPricePerDay"
-            label="Room Price (per day)"
-            labelPlacement="outside"
-            placeholder="₹000"
-            color="default"
-            isRequired={true}
-            value={roomPricePerDay}
-            onValueChange={setRoomPricePerDay}
-            radius="md"
-            size="lg"
-            variant="bordered"
-            isDisabled={
-              selectedProperty?.type?.toLowerCase().includes("hotel")
-                ? false
-                : true
-            }
-          />
+
           <div className="flex items-center gap-2.5">
             <Input
               type="number"
