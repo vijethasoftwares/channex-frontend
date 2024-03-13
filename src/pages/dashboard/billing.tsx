@@ -16,7 +16,7 @@ import {
 import axios from "axios";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { createSearchParams, useNavigate } from "react-router-dom";
 
 type Props = {
   children?: React.ReactNode;
@@ -177,14 +177,23 @@ const Billing: FC<Props> = () => {
                   })}
                 </div>
                 <Button
-                  onPress={() =>
-                    navigate(
-                      "/dashboard/billing/create?guestId=" +
-                        Array.from(selectedGuest).toString() +
-                        "&bookingId=" +
-                        guests?._id
-                    )
-                  }
+                  onPress={() => {
+                    if (Array.from(selectedGuest)?.length === 0) {
+                      toast.error("Select a guest to create bill");
+                      return;
+                    }
+                    if (!guests?._id) {
+                      toast.error("No booking found for the guest");
+                      return;
+                    }
+                    navigate({
+                      pathname: "/dashboard/billing/create",
+                      search: createSearchParams({
+                        guestId: Array.from(selectedGuest).toString(),
+                        bookingId: guests._id,
+                      }).toString(),
+                    });
+                  }}
                   className="bg-zinc-900 text-white font-medium ml-auto"
                 >
                   Create Bill

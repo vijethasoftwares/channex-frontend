@@ -632,7 +632,7 @@ const AddProperty: FC<Props> = () => {
                 placeholder="Select property type"
                 selectedKeys={propertyType}
                 onSelectionChange={setPropertyType}
-                isDisabled
+                isDisabled={true}
                 radius="md"
                 size="lg"
                 variant="bordered"

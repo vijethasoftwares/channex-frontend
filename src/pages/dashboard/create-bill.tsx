@@ -1,15 +1,26 @@
-import { useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 const CreateBill = () => {
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const bookingId = params.get("bookingId");
-  const guestId = params.get("guestId");
+  const [data, setData] = useState({
+    bookingId: "",
+    guestId: "",
+  });
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    for (const [key, value] of searchParams.entries()) {
+      console.log(key, value);
+      setData((prev) => ({ ...prev, [key]: value }));
+    }
+  }, []);
+
+  console.log(data);
 
   return (
     <div>
-      CreateBill Booking ID: {bookingId}
-      Guest ID: {guestId}
+      CreateBill Booking ID: {data?.bookingId}
+      Guest ID: {data?.guestId}
     </div>
   );
 };
