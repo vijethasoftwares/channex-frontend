@@ -16,6 +16,7 @@ import AllComplaints from "./pages/complaints/all.tsx";
 import Analytics from "./pages/dashboard/analytics.tsx";
 import Billing from "./pages/dashboard/billing.tsx";
 import CorporatePortal from "./pages/dashboard/corporate-portal.tsx";
+import CreateBill from "./pages/dashboard/create-bill.tsx";
 import Guests from "./pages/dashboard/guests.tsx";
 import Report from "./pages/dashboard/report.tsx";
 import Users from "./pages/dashboard/users.tsx";
@@ -61,7 +62,16 @@ const router = createBrowserRouter([
           },
           {
             path: "billing",
-            element: <Billing />,
+            children: [
+              {
+                index: true,
+                element: <Billing />,
+              },
+              {
+                path: "create/*",
+                element: <CreateBill />,
+              },
+            ],
           },
           {
             path: "users",

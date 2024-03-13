@@ -85,6 +85,7 @@ export interface RoomProps {
   roomType: string;
   roomSize: number;
   pricePerMonth?: number;
+  roomDeposit?: number;
   maxOccupancy: number;
   description?: string;
   propertyId: string;

@@ -2,16 +2,8 @@ import Container from "@/components/container";
 import ContainerColumn from "@/components/container-column";
 import Heading from "@/components/heading";
 import { GlobalContextType } from "@/components/providers";
-import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import firebase_app from "@/lib/firebase";
-import { SERVER_URL, cn, useGlobalContext } from "@/lib/utils";
+import { SERVER_URL, useGlobalContext } from "@/lib/utils";
 import {
   Avatar,
   Button,
@@ -20,14 +12,10 @@ import {
   SelectItem,
   SelectedItems,
   Selection,
-  Switch,
   Textarea,
-  Tooltip,
 } from "@nextui-org/react";
 import axios, { AxiosError, AxiosResponse } from "axios";
-import { format } from "date-fns";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
-import { CalendarIcon, Info } from "lucide-react";
 import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 // import { useNavigate } from "react-router-dom";
@@ -70,12 +58,12 @@ interface MealData {
   nonVegMealItems: string[];
 }
 
-interface GuestDetailsProps {
-  name: string;
-  email: string;
-  phoneNumber: string;
-  checkOutDate?: Date;
-}
+// interface GuestDetailsProps {
+//   name: string;
+//   email: string;
+//   phoneNumber: string;
+//   checkOutDate?: Date;
+// }
 
 interface ImagesProps {
   roomImage: { label: string; url: string }[];
@@ -109,20 +97,21 @@ const AddRoom: FC<Props> = () => {
   const [roomType, setRoomType] = useState<Selection>(new Set([]));
   const [roomSize, setRoomSize] = useState<string | undefined>("");
   const [maxOccupancy, setMaxOccupancy] = useState<string | undefined>();
-  const [isGuestLiving, setIsGuestLiving] = useState<boolean>(false);
-  const [guestName, setGuestName] = useState<string | undefined>("");
-  const [guestEmail, setGuestEmail] = useState<string | undefined>("");
-  const [guestPhoneNumber, setGuestPhoneNumber] = useState<string | undefined>(
-    ""
-  );
-  const [guestCheckOutDate, setGuestCheckOutDate] = useState<
-    Date | undefined
-  >();
-  const [guestDetails, setGuestDetails] = useState<GuestDetailsProps[]>([]);
+  // const [isGuestLiving, setIsGuestLiving] = useState<boolean>(false);
+  // const [guestName, setGuestName] = useState<string | undefined>("");
+  // const [guestEmail, setGuestEmail] = useState<string | undefined>("");
+  // const [guestPhoneNumber, setGuestPhoneNumber] = useState<string | undefined>(
+  //   ""
+  // );
+  // const [guestCheckOutDate, setGuestCheckOutDate] = useState<
+  //   Date | undefined
+  // >();
+  // const [guestDetails, setGuestDetails] = useState<GuestDetailsProps[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<PropertyProps>();
   const [roomPricePerMonth, setRoomPricePerMonth] = useState<
     string | undefined
   >("");
+  const [roomDeposit, setRoomDeposit] = useState<string | undefined>("");
   const [images, setImages] = useState<ImagesProps>({
     roomImage: [],
     washroomImage: [],
@@ -223,12 +212,13 @@ const AddRoom: FC<Props> = () => {
       roomType: rt,
       roomSize: parseInt(roomSize || "0"),
       roomPricePerMonth: parseInt(roomPricePerMonth || "0"),
+      roomDeposit: parseInt(roomDeposit || "0"),
       maxOccupancy: mo,
-      vacancy: mo - guestDetails.length,
+      // vacancy: mo - guestDetails.length,
       roomDescription,
       propertyId: p,
       propertyType: selectedProperty?.type,
-      guestDetails,
+      // guestDetails,
       images,
       roomFacilities: rf,
     };
@@ -407,28 +397,6 @@ const AddRoom: FC<Props> = () => {
             size="lg"
             variant="bordered"
           />
-          <Input
-            type="number"
-            onWheel={(e) => e.currentTarget.blur()}
-            name="roomPricePerMonth"
-            label="Room Price (per month)"
-            labelPlacement="outside"
-            placeholder="₹000"
-            color="default"
-            isRequired={true}
-            value={roomPricePerMonth}
-            onValueChange={setRoomPricePerMonth}
-            isDisabled={
-              selectedProperty?.type?.toLowerCase().includes("pg") ||
-              selectedProperty?.type?.toLowerCase().includes("apartment")
-                ? false
-                : true
-            }
-            radius="md"
-            size="lg"
-            variant="bordered"
-          />
-
           <div className="flex items-center gap-2.5">
             <Input
               type="number"
@@ -472,7 +440,44 @@ const AddRoom: FC<Props> = () => {
               </button>
             </div> */}
           </div>
-          <div className="flex gap-2.5 items-center justify-between mt-5 w-full">
+          <Input
+            type="number"
+            onWheel={(e) => e.currentTarget.blur()}
+            name="roomPricePerMonth"
+            label="Room Price (per month)"
+            labelPlacement="outside"
+            placeholder="₹000"
+            color="default"
+            isRequired={true}
+            value={roomPricePerMonth}
+            onValueChange={setRoomPricePerMonth}
+            isDisabled={
+              selectedProperty?.type?.toLowerCase().includes("pg") ||
+              selectedProperty?.type?.toLowerCase().includes("apartment")
+                ? false
+                : true
+            }
+            radius="md"
+            size="lg"
+            variant="bordered"
+          />
+          <Input
+            type="number"
+            onWheel={(e) => e.currentTarget.blur()}
+            name="roomDeposit"
+            label="Deposit"
+            labelPlacement="outside"
+            placeholder="₹000"
+            color="default"
+            isRequired={true}
+            value={roomDeposit}
+            onValueChange={setRoomDeposit}
+            radius="md"
+            size="lg"
+            variant="bordered"
+          />
+
+          {/* <div className="flex gap-2.5 items-center justify-between mt-5 w-full">
             <div className="flex items-center justify-start gap-2">
               <Switch
                 isSelected={isGuestLiving}
@@ -494,10 +499,10 @@ const AddRoom: FC<Props> = () => {
                 ? parseInt(maxOccupancy || "0")
                 : parseInt(maxOccupancy || "0") - guestDetails?.length}
             </Badge>
-          </div>
+          </div> */}
         </div>
       </div>
-      {isGuestLiving == true && (
+      {/* {isGuestLiving == true && (
         <div className="mt-5 p-5 bg-zinc-50 border rounded-md w-full flex flex-col justify-start items-start gap-5">
           <Heading variant="subheading" className="">
             Guest Details
@@ -620,7 +625,7 @@ const AddRoom: FC<Props> = () => {
             </Button>
           </div>
         </div>
-      )}
+      )} */}
       <div className="mt-5 p-5 bg-zinc-50 border rounded-md w-full flex flex-col justify-start items-start gap-5">
         <Heading variant="subheading">Images</Heading>
         <div className="grid grid-cols-4 gap-2.5 w-full">
