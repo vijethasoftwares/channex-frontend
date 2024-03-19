@@ -34,6 +34,13 @@ import AddRoom from "./pages/rooms/add.tsx";
 import AllRooms from "./pages/rooms/all.tsx";
 import EditRoom from "./pages/rooms/edit.tsx";
 import CreateUser from "./pages/user/create.tsx";
+import AddChannelProperty from "./pages/channel/addProperty.tsx";
+import AllChannelProperties from "./pages/channel/all.tsx";
+import EditChannelProperty from "./pages/channel/edit.tsx";
+import AddRoomType from "./pages/channel/rooms/addRoomType.tsx";
+import AllChannelRooms from "./pages/channel/rooms/allRooms.tsx";
+import EditChannelRoom from "./pages/channel/rooms/editRoom.tsx";
+import AddRates from "./pages/channel/rooms/addRates.tsx";
 
 const router = createBrowserRouter([
   {
@@ -187,13 +194,46 @@ const router = createBrowserRouter([
         ],
       },
       {
+        path: "channel",
+        children: [
+          {
+            path: "all",
+            element: <AllChannelProperties />,
+          },
+          {
+            path: "addChannelProperty",
+            element: <AddChannelProperty />,
+          },
+          {
+            path: "editChannelProperty/:id",
+            element: <EditChannelProperty />,
+          },
+          {
+            path: "addRoomType",
+            element: <AddRoomType />,
+          },
+          {
+            path: "allRoomTypes",
+            element: <AllChannelRooms />,
+          },
+          {
+            path: "editRoom/:id",
+            element: <EditChannelRoom />,
+          },
+          {
+            path: "AddRoomRates",
+            element: <AddRates />,
+          },
+        ],
+      },
+      {
         path: "*",
         element: <ErrorPage />,
       },
       {
         path: "pricing",
         element: <Pricing />,
-      },
+      }
     ],
   },
   {

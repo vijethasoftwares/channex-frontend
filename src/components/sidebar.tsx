@@ -14,7 +14,7 @@ import CollapsableDropdown, {
   CollapsableDropdownItem,
 } from "./collapsable-dropdown";
 
-interface Props {}
+interface Props { }
 
 const DashboardLinks = [
   {
@@ -113,6 +113,29 @@ const PricingLinks = [
   },
 ];
 
+const ChannelLinks = [
+  {
+    title: "All Property",
+    link: "/channel/all",
+  },
+  {
+    title: "Add Property",
+    link: "/channel/addChannelProperty",
+  },
+  {
+    title: "Add Room Type",
+    link: "/channel/addRoomType",
+  },
+  {
+    title: "Add Room Rates",
+    link: "/channel/addRoomRates",
+  },
+  {
+    title: "All Room Types",
+    link: "/channel/allRoomTypes",
+  },
+];
+
 const SideBar: FC<Props> = () => {
   return (
     <motion.div
@@ -188,6 +211,18 @@ const SideBar: FC<Props> = () => {
           icon={<DollarSign size={18} />}
         >
           {PricingLinks.map((link, i) => (
+            <CollapsableDropdownItem
+              key={i}
+              title={link.title}
+              link={link.link}
+            />
+          ))}
+        </CollapsableDropdown>
+        <CollapsableDropdown
+          title="Channel"
+          icon={<DollarSign size={18} />}
+        >
+          {ChannelLinks.map((link, i) => (
             <CollapsableDropdownItem
               key={i}
               title={link.title}
