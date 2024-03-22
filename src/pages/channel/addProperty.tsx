@@ -7,33 +7,21 @@ import { GlobalContextType } from "@/components/providers";
 // import { PropertyProps } from "@/components/types/app";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import firebase_app from "@/lib/firebase";
+import {
+    FormDescription
+} from "@/components/ui/form"
 import {
     SERVER_URL,
     // convertImagesToBase64,
     useGlobalContext,
 } from "@/lib/utils";
 import {
-    Avatar,
     Checkbox,
     Input,
-    Modal,
-    ModalBody,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
     Select,
     SelectItem,
-    Selection,
-    useDisclosure,
+    Selection
 } from "@nextui-org/react";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
@@ -43,10 +31,7 @@ import React, { FC, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import {
-    DaysEnum,
-    MealNameEnum,
     Permissions,
-    PropertyTypeEnum,
     facilitiesEnum,
 } from "./consts"
 
@@ -151,6 +136,10 @@ const AddChannelProperty: FC<Props> = () => {
     );
     const [coupleFriendly, setCoupleFriendly] = useState<boolean>(false);
     const [images, setImages] = useState<{ label: string; url: string }[]>([]);
+    const [settings, setSettings] = useState<any>({
+        minPrice: "",
+        maxPrice: ""
+    });
     const [permissions, setPermissions] = useState<Selection>(new Set([]));
     const [isParkingSpaceAvailable, setIsParkingSpaceAvailable] =
         useState<Selection>(new Set(["false"]));
@@ -170,64 +159,8 @@ const AddChannelProperty: FC<Props> = () => {
     /*
      ** Food Menu States
      */
-    const [foodMenu, setFoodMenu] = useState<FoodMenuProps[]>(
-        DaysEnum.map((day: any) => {
-            return {
-                day: day,
-                meals: [
-                    {
-                        name: MealNameEnum[0],
-                        hasMealItems: false,
-                        vegMealItems: [],
-                        nonVegMealItems: [],
-                    },
-                    {
-                        name: MealNameEnum[1],
-                        hasMealItems: false,
-                        vegMealItems: [],
-                        nonVegMealItems: [],
-                    },
-                    {
-                        name: MealNameEnum[2],
-                        hasMealItems: false,
-                        vegMealItems: [],
-                        nonVegMealItems: [],
-                    },
-                    {
-                        name: MealNameEnum[3],
-                        hasMealItems: false,
-                        vegMealItems: [],
-                        nonVegMealItems: [],
-                    },
-                ],
-            };
-        })
-    );
-    const [mealName, setMealName] = useState<Selection>(new Set([]));
-    const [day, setDay] = useState<Selection>(new Set([]));
-    const [vegMealItems, setVegMealItems] = useState<string>("");
-    const [vegMealItemsArray, setVegMealItemsArray] = useState<string[]>([]);
-    const [nonVegMealItems, setNonVegMealItems] = useState<string>("");
-    const [nonVegMealItemsArray, setNonVegMealItemsArray] = useState<string[]>(
-        []
-    );
     //documents states
-    const [propertyOwnStatus, setPropertyOwnStatus] = useState<Selection>(
-        new Set([])
-    );
-    const [documentType, setDocumentType] = useState<Selection>(new Set([]));
-    const [documentNumber, setDocumentNumber] = useState<string>("");
     const [documentPdfUrl, setDocumentPdfUrl] = useState<string>("");
-    const {
-        isOpen: isOpenDocuments,
-        onOpen: onOpenDocuments,
-        onOpenChange: onOpenChangeDocuments,
-    } = useDisclosure();
-    const {
-        isOpen: isOpenFoodMenu,
-        onOpen: onOpenFoodMenu,
-        onOpenChange: onOpenChangeFoodMenu,
-    } = useDisclosure();
 
     const navigate = useNavigate();
 
@@ -368,25 +301,6 @@ const AddChannelProperty: FC<Props> = () => {
         }
     };
 
-    const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length === 1) {
-            const file = e.target.files[0];
-            const fileRef = ref(
-                storage,
-                `property_documents/${file.name}-${Array.from(
-                    propertyOwnStatus
-                ).toString()}-${Array.from(documentType).toString()}-${documentNumber}`
-            );
-            await uploadBytes(fileRef, file);
-            const url = await getDownloadURL(fileRef);
-            setDocumentPdfUrl(url);
-            console.log(url);
-            toast.success("Document uploaded successfully");
-        } else {
-            toast.error("You can only upload 1 pdf");
-        }
-    };
-
     const handleImageDelete = (index: number) => {
         const newImages = [...images];
         newImages.splice(index, 1);
@@ -412,11 +326,6 @@ const AddChannelProperty: FC<Props> = () => {
             setSubmitting(false);
             return;
         }
-        const selectedManager = allManagers.find((manager) => manager._id === mId);
-        const np = Array.from(nearbyPlaces) as string[];
-        const p = Array.from(permissions) as string[];
-        const f = Array.from(facilities) as string[];
-        const ipsa = Array.from(isParkingSpaceAvailable) as string[];
         // console.log(coordinate);
         // const imagesLinks = await uploadImagesToFirebase(images);
         const property: any = {
@@ -500,90 +409,6 @@ const AddChannelProperty: FC<Props> = () => {
         }
     };
 
-    console.log();
-
-    const handleAddDocument = async () => {
-        if (documentPdfUrl.length == 0) {
-            toast.error("Please upload the document pdf");
-            return;
-        }
-        if (!documentNumber) {
-            toast.error("Document number cannot be empty");
-            return;
-        }
-        onOpenChangeDocuments();
-    };
-    const handleAddMeal = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        const dayString = Array.from(day).toString();
-        const vmi = Array.from(vegMealItemsArray);
-        const nvmi = Array.from(nonVegMealItemsArray);
-        const mn = Array.from(mealName).toString();
-        if (dayString.length == 0) {
-            toast.error("Day cannot be empty");
-            return;
-        }
-        if (mn.length == 0) {
-            toast.error("Meal name cannot be empty");
-            return;
-        }
-        if (vmi.length == 0 && nvmi.length == 0) {
-            toast.error("Meal items cannot be empty");
-            return;
-        }
-
-        const dayIndex = foodMenu.findIndex((d) => d.day === dayString);
-
-        if (dayIndex !== -1) {
-            // Day already exists in the foodMenu array, update it
-            const foodDay = foodMenu[dayIndex];
-            const mealIndex = foodDay.meals.findIndex((m) => m.name === mn);
-
-            if (mealIndex !== -1) {
-                // Meal already exists in the meals array, update it
-                const updatedMeal = {
-                    ...foodDay.meals[mealIndex],
-                    vegMealItems: vmi,
-                    nonVegMealItems: nvmi,
-                    hasMealItems: true,
-                };
-                const updatedMeals = [...foodDay.meals];
-                updatedMeals[mealIndex] = updatedMeal;
-                const updatedFoodDay = { ...foodDay, meals: updatedMeals };
-                const newFoodMenu = [...foodMenu];
-                newFoodMenu[dayIndex] = updatedFoodDay;
-                console.log(newFoodMenu);
-                setFoodMenu(newFoodMenu);
-            } else {
-                // Meal does not exist in the meals array, add it
-                const updatedFoodDay = {
-                    ...foodDay,
-                    meals: [
-                        ...foodDay.meals,
-                        {
-                            name: mn,
-                            hasMealItems: true,
-                            vegMealItems: vmi,
-                            nonVegMealItems: nvmi,
-                        },
-                    ],
-                };
-                const newFoodMenu = [...foodMenu];
-                newFoodMenu[dayIndex] = updatedFoodDay;
-                console.log(newFoodMenu);
-                setFoodMenu(newFoodMenu);
-            }
-        }
-
-        setDay(new Set([]));
-        setMealName(new Set([]));
-        setVegMealItems("");
-        setVegMealItemsArray([]);
-        setNonVegMealItems("");
-        setNonVegMealItemsArray([]);
-        onOpenChangeFoodMenu();
-    };
-
     useEffect(() => {
         if (user?.token) {
             (async () => {
@@ -603,6 +428,10 @@ const AddChannelProperty: FC<Props> = () => {
             toast.error("Login first to add property");
         }
     }, [user]);
+
+    const handleChange = (e: any) => {
+        setSettings({ ...settings, [e.target.name]: e.target.value })
+    }
 
     return (
         <>
@@ -796,7 +625,7 @@ const AddChannelProperty: FC<Props> = () => {
                                     </SelectItem>
                                 ))}
                             </Select>
-                             <Input
+                            <Input
                                 type="text"
                                 name="zipCode"
                                 label="Zip Code"
@@ -809,7 +638,7 @@ const AddChannelProperty: FC<Props> = () => {
                                 value={state}
                                 onValueChange={setState}
                             />
-                             <Input
+                            <Input
                                 type="text"
                                 name="address"
                                 label="Address"
@@ -822,7 +651,7 @@ const AddChannelProperty: FC<Props> = () => {
                                 value={state}
                                 onValueChange={setState}
                             />
-                             <div className="flex items-end justify-start w-full">
+                            <div className="flex items-end justify-start w-full">
                                 <Checkbox
                                     isSelected={coupleFriendly}
                                     onValueChange={setCoupleFriendly}
@@ -832,296 +661,167 @@ const AddChannelProperty: FC<Props> = () => {
                             </div>
                         </div>
                     </div>
-                    <Container className="flex flex-col gap-2.5 w-full p-0 bg-white rounded-md">
-                        <ContainerBetween>
-                            <Heading variant="subheading">Food Menu</Heading>
-                            <Button
-                                onClick={onOpenFoodMenu}
-                                size={"sm"}
-                                className="active:scale-95"
+                    <div className="p-5 bg-zinc-50 border rounded-md w-full">
+                        <Heading variant="subheading">Settings</Heading>
+                        <div className="mt-5 grid grid-cols-3 gap-5 w-full">
+                            <Input
+                                type="text"
+                                name="name"
+                                label="Min Price"
+                                labelPlacement="outside"
+                                placeholder="Enter property name"
+                                color="default"
+                                isRequired={true}
+                                value={settings?.minPrice}
+                                onValueChange={handleChange}
+                                radius="md"
+                                size="lg"
+                                variant="bordered"
+                            />
+                            <Input
+                                type="text"
+                                name="state"
+                                label="Max Price"
+                                labelPlacement="outside"
+                                placeholder="Enter state"
+                                color="default"
+                                radius="md"
+                                size="lg"
+                                variant="bordered"
+                                value={settings?.maxPrice}
+                                onValueChange={handleChange}
+                            />
+                        </div>
+                        <Heading className="text-sm font-thin mt-5 ">Automatic Availability Update Settings</Heading>
+                        <Heading className="text-sm font-thin mt-5 ">Here you will decide what should happen when a New, Modified or Cancelled booking happens. If the availability will change automatically or the PMS will control these changes</Heading>
+                        <div className="mt-3 grid grid-cols-3 gap-5 w-full">
+                            <div>
+                                <Select
+                                    name="is_parking_space_available"
+                                    label="New Booking"
+                                    labelPlacement="outside"
+                                    placeholder="If selected, for any new bookings created the availability will be negatively adjusted"
+                                    color="default"
+                                    radius="md"
+                                    size="lg"
+                                    variant="bordered"
+                                    selectedKeys={isParkingSpaceAvailable}
+                                    onSelectionChange={setIsParkingSpaceAvailable}
+                                >
+                                    <SelectItem key={"true"} value="true">
+                                        Yes
+                                    </SelectItem>
+                                    <SelectItem key={"false"} value="false">
+                                        No
+                                    </SelectItem>
+                                </Select>
+                                <p className="mt-1 text-xs text-slate-400 font-thin text-muted-foreground">
+                                    If selected, for any new bookings created the availability will be negatively adjusted</p>
+                            </div>
+                            <div><Select
+                                name="is_parking_space_available"
+                                label="Cancelled Booking"
+                                labelPlacement="outside"
+                                placeholder="Select an option"
+                                color="default"
+                                radius="md"
+                                size="lg"
+                                variant="bordered"
+                                selectedKeys={isParkingSpaceAvailable}
+                                onSelectionChange={setIsParkingSpaceAvailable}
                             >
-                                + Add
-                            </Button>
-                        </ContainerBetween>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Day</TableHead>
-                                    <TableHead>
-                                        Breakfast
-                                        <span className="block text-xs">
-                                            Timing: 7:00 AM - 10:00 AM
-                                        </span>
-                                    </TableHead>
-                                    <TableHead>
-                                        Lunch
-                                        <span className="block text-xs">
-                                            Timing: 12:00 PM - 3:00 PM
-                                        </span>
-                                    </TableHead>
-                                    <TableHead>
-                                        Snack
-                                        <span className="block text-xs">
-                                            Timing: 4:00 PM - 6:00 PM
-                                        </span>
-                                    </TableHead>
-                                    <TableHead>
-                                        Dinner
-                                        <span className="block text-xs">
-                                            Timing: 8:00 PM - 10:00 PM
-                                        </span>
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {foodMenu &&
-                                    foodMenu.length > 0 &&
-                                    foodMenu.map((day: FoodMenuProps, dayIndex) => {
-                                        return (
-                                            <TableRow key={dayIndex}>
-                                                <TableCell className="border-r">{day?.day}</TableCell>
-                                                <TableCell className="border-r p-0">
-                                                    <div className=" flex flex-col *:flex-1 *:p-4 w-full">
-                                                        <div className="border-b">
-                                                            <span className="block">
-                                                                {day.meals.map(
-                                                                    (meal, mealIndex) =>
-                                                                        meal["name"] === MealNameEnum[0] &&
-                                                                        meal.vegMealItems.length > 0 && (
-                                                                            <span
-                                                                                className="font-semibold"
-                                                                                key={mealIndex}
-                                                                            >
-                                                                                Veg
-                                                                            </span>
-                                                                        )
-                                                                )}
-                                                            </span>
-                                                            <span className="mt-2 flex gap-1">
-                                                                {day?.meals.map((meal) => {
-                                                                    if (
-                                                                        meal["name"] === MealNameEnum[0] &&
-                                                                        meal.vegMealItems.length > 0
-                                                                    ) {
-                                                                        return meal?.vegMealItems?.map((item) => (
-                                                                            <Badge>{item}</Badge>
-                                                                        ));
-                                                                    }
-                                                                })}
-                                                            </span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="block">
-                                                                {day.meals.map(
-                                                                    (meal, mealIndex) =>
-                                                                        meal["name"] === MealNameEnum[0] &&
-                                                                        meal.nonVegMealItems.length > 0 && (
-                                                                            <span
-                                                                                className="font-semibold"
-                                                                                key={mealIndex}
-                                                                            >
-                                                                                Non-Veg
-                                                                            </span>
-                                                                        )
-                                                                )}
-                                                            </span>
-                                                            <span className="mt-2 flex gap-1">
-                                                                {day?.meals.map((meal) => {
-                                                                    if (
-                                                                        meal["name"] === MealNameEnum[0] &&
-                                                                        meal.nonVegMealItems.length > 0
-                                                                    ) {
-                                                                        return meal?.nonVegMealItems?.map(
-                                                                            (item) => <Badge>{item}</Badge>
-                                                                        );
-                                                                    }
-                                                                })}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="border-r p-0">
-                                                    <div className=" flex flex-col *:flex-1 *:p-4 w-full">
-                                                        <div className="border-b">
-                                                            <span className="block">
-                                                                {day.meals.map(
-                                                                    (meal, mealIndex) =>
-                                                                        meal["name"] === MealNameEnum[1] &&
-                                                                        meal.vegMealItems.length > 0 && (
-                                                                            <span
-                                                                                className="font-semibold"
-                                                                                key={mealIndex}
-                                                                            >
-                                                                                Veg
-                                                                            </span>
-                                                                        )
-                                                                )}
-                                                            </span>
-                                                            <span className="mt-2 flex gap-1">
-                                                                {day?.meals.map((meal) => {
-                                                                    if (
-                                                                        meal["name"] === MealNameEnum[1] &&
-                                                                        meal.vegMealItems.length > 0
-                                                                    ) {
-                                                                        return meal?.vegMealItems?.map((item) => (
-                                                                            <Badge>{item}</Badge>
-                                                                        ));
-                                                                    }
-                                                                })}
-                                                            </span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="block">
-                                                                {day.meals.map(
-                                                                    (meal, mealIndex) =>
-                                                                        meal["name"] === MealNameEnum[1] &&
-                                                                        meal.nonVegMealItems.length > 0 && (
-                                                                            <span
-                                                                                className="font-semibold"
-                                                                                key={mealIndex}
-                                                                            >
-                                                                                Non-Veg
-                                                                            </span>
-                                                                        )
-                                                                )}
-                                                            </span>
-                                                            <span className="mt-2 flex gap-1">
-                                                                {day?.meals.map((meal) => {
-                                                                    if (
-                                                                        meal["name"] === MealNameEnum[1] &&
-                                                                        meal.nonVegMealItems.length > 0
-                                                                    ) {
-                                                                        return meal?.nonVegMealItems?.map(
-                                                                            (item) => <Badge>{item}</Badge>
-                                                                        );
-                                                                    }
-                                                                })}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="border-r">
-                                                    <div className="flex flex-col *:flex-1 w-full">
-                                                        <span className="block">
-                                                            {day.meals.map((meal, mealIndex) => {
-                                                                //check if there is a meal name snack
-                                                                //and if there are any meal items
-                                                                //if there are no meal items, then show N/P
-                                                                if (
-                                                                    meal["name"] === MealNameEnum[2] &&
-                                                                    meal.hasMealItems == false
-                                                                ) {
-                                                                    return "N/P";
-                                                                }
-                                                                if (
-                                                                    meal["name"] === MealNameEnum[2] &&
-                                                                    (meal.vegMealItems.length > 0 ||
-                                                                        meal.nonVegMealItems.length > 0)
-                                                                ) {
-                                                                    return (
-                                                                        <span
-                                                                            className="font-semibold"
-                                                                            key={mealIndex}
-                                                                        >
-                                                                            snack items
-                                                                        </span>
-                                                                    );
-                                                                }
-                                                            })}
-                                                            {day.meals.length < 2 && "N/P"}
-                                                        </span>
-                                                        <span className="mt-2 flex gap-1">
-                                                            {day?.meals.map((meal) => {
-                                                                if (
-                                                                    meal["name"] === MealNameEnum[2] &&
-                                                                    meal.vegMealItems.length > 0
-                                                                ) {
-                                                                    return meal?.vegMealItems?.map((item) => (
-                                                                        <Badge>{item}</Badge>
-                                                                    ));
-                                                                }
-                                                            })}
-                                                        </span>
-                                                        <span className="mt-2 flex gap-1">
-                                                            {day?.meals.map((meal) => {
-                                                                if (
-                                                                    meal["name"] === MealNameEnum[2] &&
-                                                                    meal.nonVegMealItems.length > 0
-                                                                ) {
-                                                                    return meal?.nonVegMealItems?.map((item) => (
-                                                                        <Badge>{item}</Badge>
-                                                                    ));
-                                                                }
-                                                            })}
-                                                        </span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="p-0">
-                                                    <div className=" flex flex-col *:flex-1 *:p-4 w-full">
-                                                        <div className="border-b">
-                                                            <span className="block">
-                                                                {day.meals.map(
-                                                                    (meal, mealIndex) =>
-                                                                        meal["name"] === MealNameEnum[3] &&
-                                                                        meal.vegMealItems.length > 0 && (
-                                                                            <span
-                                                                                className="font-semibold"
-                                                                                key={mealIndex}
-                                                                            >
-                                                                                Veg
-                                                                            </span>
-                                                                        )
-                                                                )}
-                                                            </span>
-                                                            <span className="mt-2 flex gap-1">
-                                                                {day?.meals.map((meal) => {
-                                                                    if (
-                                                                        meal["name"] === MealNameEnum[3] &&
-                                                                        meal.vegMealItems.length > 0
-                                                                    ) {
-                                                                        return meal?.vegMealItems?.map((item) => (
-                                                                            <Badge>{item}</Badge>
-                                                                        ));
-                                                                    }
-                                                                })}
-                                                            </span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="block">
-                                                                {day.meals.map(
-                                                                    (meal, mealIndex) =>
-                                                                        meal["name"] === MealNameEnum[3] &&
-                                                                        meal.nonVegMealItems.length > 0 && (
-                                                                            <span
-                                                                                className="font-semibold"
-                                                                                key={mealIndex}
-                                                                            >
-                                                                                Non-Veg
-                                                                            </span>
-                                                                        )
-                                                                )}
-                                                            </span>
-                                                            <span className="mt-2 flex gap-1">
-                                                                {day?.meals.map((meal) => {
-                                                                    if (
-                                                                        meal["name"] === MealNameEnum[3] &&
-                                                                        meal.nonVegMealItems.length > 0
-                                                                    ) {
-                                                                        return meal?.nonVegMealItems?.map(
-                                                                            (item) => <Badge>{item}</Badge>
-                                                                        );
-                                                                    }
-                                                                })}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                            </TableBody>
-                        </Table>
-                    </Container>
+                                <SelectItem key={"true"} value="true">
+                                    Yes
+                                </SelectItem>
+                                <SelectItem key={"false"} value="false">
+                                    No
+                                </SelectItem>
+                            </Select>
+                                <p className="mt-1 text-xs text-slate-400 font-thin text-muted-foreground">
+                                    If selected, for any modified bookings created the availability will be automatically adjusted</p></div>
+                            <div className="relative flex flex-col items-center *:w-full">
+                                <Select
+                                    name="is_parking_space_available"
+                                    label="Modified Booking"
+                                    labelPlacement="outside"
+                                    placeholder="
+
+                                    If selected, for any modified bookings created the availability will be automatically adjusted"
+                                    color="default"
+                                    radius="md"
+                                    size="lg"
+                                    variant="bordered"
+                                    selectedKeys={isParkingSpaceAvailable}
+                                    onSelectionChange={setIsParkingSpaceAvailable}
+                                >
+                                    <SelectItem key={"true"} value="true">
+                                        Yes
+                                    </SelectItem>
+                                    <SelectItem key={"false"} value="false">
+                                        No
+                                    </SelectItem>
+                                </Select>
+                                <p className="mt-1 text-xs text-slate-400 font-thin text-muted-foreground">
+                                    If selected, for any cancelled bookings the availability will be positively adjusted</p>
+                            </div>
+                            <div>
+                                <Input
+                                    type="text"
+                                    name="city"
+                                    label="Inventory Days"
+                                    labelPlacement="outside"
+                                    placeholder="Set the length of the inventory table in number of days. Min: 100, Max: 730"
+                                    color="default"
+                                    radius="md"
+                                    size="lg"
+                                    variant="bordered"
+                                    value={city}
+                                    onValueChange={setCity}
+                                />
+                                <p className="mt-1 text-xs text-slate-400 font-thin text-muted-foreground">
+                                    Set the length of the inventory table in number of days. Min: 100, Max: 730</p>
+                            </div>
+                            <Input
+                                type="text"
+                                name="state"
+                                label="Minimum Stay Settings"
+                                labelPlacement="outside"
+                                placeholder="Enter state"
+                                color="default"
+                                radius="md"
+                                size="lg"
+                                variant="bordered"
+                                value={state}
+                                onValueChange={setState}
+                            />
+                            <Input
+                                type="text"
+                                name="zipCode"
+                                label="Cut off time"
+                                labelPlacement="outside"
+                                placeholder="Enter zipcode"
+                                color="default"
+                                radius="md"
+                                size="lg"
+                                variant="bordered"
+                                value={state}
+                                onValueChange={setState}
+                            />
+                            <Input
+                                type="text"
+                                name="address"
+                                label="Cut Off Days"
+                                labelPlacement="outside"
+                                placeholder="Enter address"
+                                color="default"
+                                radius="md"
+                                size="lg"
+                                variant="bordered"
+                                value={state}
+                                onValueChange={setState}
+                            />
+                        </div>
+                    </div>
                     <div className="w-full grid lg:grid-cols-2 gap-2.5">
                         <div className="p-5 bg-zinc-50 border rounded-md w-full flex flex-col justify-start items-start gap-5">
                             <Heading variant="subheading">Images</Heading>
@@ -1204,49 +904,6 @@ const AddChannelProperty: FC<Props> = () => {
                             Cancel
                         </Button>
                         <Button
-                            onClick={onOpenDocuments}
-                            variant="outline"
-                            className=" active:scale-95"
-                        >
-                            Add Documents
-                        </Button>
-                        <Select
-                            items={allManagers}
-                            // label="Assigned to"
-                            placeholder="Select a manager"
-                            labelPlacement="outside"
-                            className="max-w-[250px]"
-                            selectedKeys={managerId}
-                            onSelectionChange={setManagerId}
-                            classNames={{
-                                trigger:
-                                    "bg-white border border-gray-300 rounded-md w-full px-3 py-2 text-sm text-gray-700 text-black",
-                            }}
-                        // classNames={{
-                        //   trigger:
-                        //     "bg-white border border-gray-300 rounded-md w-full px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all duration-200 ease-in-out",
-                        // }}
-                        >
-                            {(user) => (
-                                <SelectItem key={user?._id} textValue={user?.name}>
-                                    <div className="flex gap-2 items-center">
-                                        <Avatar
-                                            alt={user?.name}
-                                            className="flex-shrink-0"
-                                            size="sm"
-                                            src={user?.profilePicture}
-                                        />
-                                        <div className="flex flex-col">
-                                            <span className="text-small">{user?.name}</span>
-                                            <span className="text-tiny text-default-400">
-                                                {user?.email}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </SelectItem>
-                            )}
-                        </Select>
-                        <Button
                             onClick={handleSubmit}
                             isLoading={submitting}
                             className="bg-purple-700 active:scale-95"
@@ -1256,255 +913,6 @@ const AddChannelProperty: FC<Props> = () => {
                     </div>
                 </ContainerColumn>
             </Container>
-
-            <Modal
-                backdrop="blur"
-                isOpen={isOpenDocuments}
-                onOpenChange={onOpenChangeDocuments}
-            >
-                <ModalContent>
-                    {(onClose) => (
-                        <>
-                            <ModalHeader className="flex flex-col gap-1">
-                                Add Documents
-                            </ModalHeader>
-                            <ModalBody>
-                                <Select
-                                    color="default"
-                                    label="Property Ownership Status"
-                                    labelPlacement="outside"
-                                    placeholder="Select an option"
-                                    selectedKeys={propertyOwnStatus}
-                                    onSelectionChange={setPropertyOwnStatus}
-                                    radius="md"
-                                    size="lg"
-                                    variant="bordered"
-                                >
-                                    {PropertyOwnStatus.map((status) => (
-                                        <SelectItem key={status} value={status}>
-                                            {status}
-                                        </SelectItem>
-                                    ))}
-                                </Select>
-                                {Array.from(propertyOwnStatus).toString() ===
-                                    PropertyOwnStatus[0] && (
-                                        <Select
-                                            color="default"
-                                            label="Document Type"
-                                            labelPlacement="outside"
-                                            placeholder="Select an option"
-                                            selectedKeys={documentType}
-                                            onSelectionChange={setDocumentType}
-                                            radius="md"
-                                            size="lg"
-                                            variant="bordered"
-                                        >
-                                            {DocumentTypeOwned.map((type) => {
-                                                return (
-                                                    <SelectItem key={type} value={type}>
-                                                        {type}
-                                                    </SelectItem>
-                                                );
-                                            })}
-                                        </Select>
-                                    )}
-                                {(Array.from(propertyOwnStatus).toString() ===
-                                    PropertyOwnStatus[1] ||
-                                    Array.from(propertyOwnStatus).toString() ===
-                                    PropertyOwnStatus[2]) && (
-                                        <Select
-                                            color="default"
-                                            label="Document Type"
-                                            labelPlacement="outside"
-                                            placeholder="Select an option"
-                                            selectedKeys={documentType}
-                                            onSelectionChange={setDocumentType}
-                                            radius="md"
-                                            size="lg"
-                                            variant="bordered"
-                                        >
-                                            {DocumentTypeRentedOrLeased.map((type) => {
-                                                return (
-                                                    <SelectItem key={type} value={type}>
-                                                        {type}
-                                                    </SelectItem>
-                                                );
-                                            })}
-                                        </Select>
-                                    )}
-                                {Array.from(documentType).toString().length > 0 && (
-                                    <div className="relative px-5 w-full py-7 bg-zinc-100 rounded-md border-dashed border-2">
-                                        <input
-                                            type="file"
-                                            multiple={true}
-                                            required
-                                            accept="image/*"
-                                            onChange={handlePdfUpload}
-                                            className="w-full h-full absolute top-0 right-0 bottom-0 left-0 opacity-0 cursor-pointer z-10"
-                                        />
-                                        <span className="inset-0 absolute z-[1] text-sm text-zinc-600 flex justify-center items-center">
-                                            + Upload Document
-                                        </span>
-                                    </div>
-                                )}
-                                <Input
-                                    autoFocus
-                                    type="text"
-                                    label="Document Number"
-                                    labelPlacement="outside"
-                                    placeholder="Enter document number"
-                                    variant="bordered"
-                                    size="lg"
-                                    radius="md"
-                                    value={documentNumber}
-                                    onValueChange={setDocumentNumber}
-                                />
-                            </ModalBody>
-                            <ModalFooter>
-                                <Button className="px-8" variant="ghost" onClick={onClose}>
-                                    Close
-                                </Button>
-                                <Button className="px-8" onClick={() => handleAddDocument()}>
-                                    Add Document
-                                </Button>
-                            </ModalFooter>
-                        </>
-                    )}
-                </ModalContent>
-            </Modal>
-
-            <Modal
-                isDismissable={false}
-                backdrop="blur"
-                isOpen={isOpenFoodMenu}
-                onOpenChange={onOpenChangeFoodMenu}
-            >
-                <ModalContent>
-                    {(onClose) => (
-                        <>
-                            <ModalHeader className="flex flex-col gap-1">
-                                Add Meal Details
-                            </ModalHeader>
-                            <ModalBody>
-                                <Select
-                                    label="Select Day"
-                                    labelPlacement="outside"
-                                    placeholder="Select an option"
-                                    color="default"
-                                    radius="md"
-                                    size="lg"
-                                    variant="bordered"
-                                    selectedKeys={day}
-                                    onSelectionChange={setDay}
-                                >
-                                    {DaysEnum &&
-                                        DaysEnum.map((Day: any) => (
-                                            <SelectItem key={Day} value={Day}>
-                                                {Day}
-                                            </SelectItem>
-                                        ))}
-                                </Select>
-                                <Select
-                                    label="Meal Name"
-                                    labelPlacement="outside"
-                                    placeholder="Select an option"
-                                    color="default"
-                                    radius="md"
-                                    size="lg"
-                                    variant="bordered"
-                                    selectedKeys={mealName}
-                                    onSelectionChange={setMealName}
-                                >
-                                    {MealNameEnum &&
-                                        MealNameEnum.map((name: any) => (
-                                            <SelectItem key={name} value={name}>
-                                                {name}
-                                            </SelectItem>
-                                        ))}
-                                </Select>
-                                <Input
-                                    autoFocus
-                                    type="text"
-                                    label="Veg Meal Items"
-                                    labelPlacement="outside"
-                                    placeholder="Enter Veg Items"
-                                    variant="bordered"
-                                    size="lg"
-                                    radius="md"
-                                    value={vegMealItems}
-                                    onValueChange={setVegMealItems}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            if (!vegMealItems) {
-                                                toast.error("Meal item cannot be empty");
-                                                return;
-                                            }
-                                            setVegMealItemsArray([
-                                                ...vegMealItemsArray,
-                                                vegMealItems,
-                                            ]);
-                                            setVegMealItems("");
-                                        }
-                                    }}
-                                />
-
-                                <div className="flex gap-1">
-                                    {vegMealItemsArray.map((item) => {
-                                        return (
-                                            <Badge key={item} className="px-3 py-1.5 ">
-                                                {item}
-                                            </Badge>
-                                        );
-                                    })}
-                                </div>
-                                <Input
-                                    autoFocus
-                                    type="text"
-                                    label="Non-Veg Meal Items"
-                                    labelPlacement="outside"
-                                    placeholder="Enter Non-Veg Items"
-                                    variant="bordered"
-                                    size="lg"
-                                    radius="md"
-                                    value={nonVegMealItems}
-                                    onValueChange={setNonVegMealItems}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            if (!nonVegMealItems) {
-                                                toast.error("Meal item cannot be empty");
-                                                return;
-                                            }
-                                            setNonVegMealItemsArray([
-                                                ...nonVegMealItemsArray,
-                                                nonVegMealItems,
-                                            ]);
-                                            setNonVegMealItems("");
-                                        }
-                                    }}
-                                />
-
-                                <div className="flex gap-1">
-                                    {nonVegMealItemsArray.map((item) => {
-                                        return (
-                                            <Badge key={item} className="px-3 py-1.5 ">
-                                                {item}
-                                            </Badge>
-                                        );
-                                    })}
-                                </div>
-                            </ModalBody>
-                            <ModalFooter>
-                                <Button className="px-8" variant="ghost" onClick={onClose}>
-                                    Close
-                                </Button>
-                                <Button className="px-8" onClick={handleAddMeal}>
-                                    Add
-                                </Button>
-                            </ModalFooter>
-                        </>
-                    )}
-                </ModalContent>
-            </Modal>
         </>
     );
 };
