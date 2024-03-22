@@ -147,7 +147,7 @@ const AddChannelProperty: FC<Props> = () => {
         useState<boolean>(false);
     const [name, setName] = useState<string>("");
     const [propertyType, setPropertyType] = useState<Selection>(
-        new Set([PropertyTypeEnum[0]])
+        new Set(['Hotel'])
     );
     const [coupleFriendly, setCoupleFriendly] = useState<boolean>(false);
     const [images, setImages] = useState<{ label: string; url: string }[]>([]);
@@ -639,7 +639,7 @@ const AddChannelProperty: FC<Props> = () => {
                                 size="lg"
                                 variant="bordered"
                             >
-                                {PropertyTypeEnum.map((type: any) => (
+                                {['Hotel'].map((type: any) => (
                                     <SelectItem key={type} value={type}>
                                         {type}
                                     </SelectItem>
@@ -796,7 +796,33 @@ const AddChannelProperty: FC<Props> = () => {
                                     </SelectItem>
                                 ))}
                             </Select>
-                            <div className="flex items-end justify-start w-full">
+                             <Input
+                                type="text"
+                                name="zipCode"
+                                label="Zip Code"
+                                labelPlacement="outside"
+                                placeholder="Enter zipcode"
+                                color="default"
+                                radius="md"
+                                size="lg"
+                                variant="bordered"
+                                value={state}
+                                onValueChange={setState}
+                            />
+                             <Input
+                                type="text"
+                                name="address"
+                                label="Address"
+                                labelPlacement="outside"
+                                placeholder="Enter address"
+                                color="default"
+                                radius="md"
+                                size="lg"
+                                variant="bordered"
+                                value={state}
+                                onValueChange={setState}
+                            />
+                             <div className="flex items-end justify-start w-full">
                                 <Checkbox
                                     isSelected={coupleFriendly}
                                     onValueChange={setCoupleFriendly}

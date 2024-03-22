@@ -47,6 +47,12 @@ interface PropertyProps {
   foodMenu?: FoodMenuProps[];
 }
 
+interface AnimalProps {
+  description: string;
+  value: string;
+  label: string;
+}
+
 interface FoodMenuProps {
   day: string;
   meals: MealData[];
@@ -92,12 +98,24 @@ const storage = getStorage(firebase_app);
 const AddRates: FC<Props> = () => {
   const { user, selectedProperty, isPropertyLoading } = useGlobalContext() as GlobalContextType;
   const [title, setTitle] = useState<string | undefined>("");
-  const [roomTypeId, setRoomTypeId] = useState<any>("");
-  const [currency, setCurrency] = useState<any>("");
+  const [roomType, setRoomType] = useState<any>(new Set([]));
+  const [meals, setMeals] = useState<any>(new Set([]));
+  const [currency, setCurrency] = useState<any>(new Set([]));
+  const [animals, setAnimals] = useState<AnimalProps[]>([
+    { label: "Cat", value: "cat", description: "The second most popular pet in the world" },
+    { label: "Dog", value: "dog", description: "The most popular pet in the world" },
+    { label: "Elephant", value: "elephant", description: "The largest land animal" }])
+  const [value, setValue] = React.useState<any>(new Set([]));
   const [adultOccupancy, setAdultOccupancy] = useState<string | undefined>("");
   const [childrenOccupancy, setChildrenOccupancy] = useState<string | undefined>("");
   const [cotSpaces, setCotSpaces] = useState<string | undefined>("");
   const [roomSize, setRoomSize] = useState<string | undefined>("");
+  const [rateForOne, setRateForOne] = useState<string | undefined>("");
+  const [rateForTwo, setRateForTwo] = useState<string | undefined>("");
+  const [rateForThree, setRateForThree] = useState<string | undefined>("");
+  const [rate, setRate] = useState<string | undefined>("");
+  const [infantFee, setInfantFee] = useState<string | undefined>("");
+  const [childrenFee, setChildrenFee] = useState<string | undefined>("");
   const [roomTypes, setRoomTypes] = useState<any[]>([]);
 
   // const [isGuestLiving, setIsGuestLiving] = useState<boolean>(false);
@@ -114,6 +132,8 @@ const AddRates: FC<Props> = () => {
     string | undefined
   >("");
   const [roomDeposit, setRoomDeposit] = useState<string | undefined>("");
+  const [sellMode, setSellMode] = useState<string | undefined>("per_room");
+  const [rateMode, setRateMode] = useState<string | undefined>("manual");
   const [roomCount, setRoomCount] = useState<string | undefined>("");
   const [images, setImages] = useState<ImagesProps>({
     roomImage: [],
@@ -124,7 +144,7 @@ const AddRates: FC<Props> = () => {
   const [roomFacilities, setRoomFacilities] = useState<Selection>(new Set([]));
   const [roomDescription, setRoomDescription] = useState<string | undefined>("");
 
-  console.log(selectedProperty, 'selectedproperty');
+  console.log(currency, roomType, 'selectedproperty');
 
   // const navigate = useNavigate();
   const fetchRoomTypes = async () => {
@@ -206,7 +226,7 @@ const AddRates: FC<Props> = () => {
       rate_plan: {
         title: title,
         property_id: "1776e383-bdb1-488c-a748-71128ad9ae84",
-        room_type_id: roomTypeId,
+        room_type_id: roomType?.currentKey,
         parent_rate_plan_id: null,
         children_fee: "0.00",
         infant_fee: "0.00",
@@ -220,11 +240,11 @@ const AddRates: FC<Props> = () => {
           {
             "occupancy": 3,
             "is_primary": true,
-            "rate": 0
+            "rate": rate
           }
         ],
-        "currency": "GBP",
-        "sell_mode": "per_room",
+        "currency": currency?.currentKey,
+        "sell_mode": sellMode,
         "rate_mode": "manual",
         "inherit_rate": false,
         "inherit_closed_to_arrival": false,
@@ -259,25 +279,24 @@ const AddRates: FC<Props> = () => {
       toast.dismiss(addToast);
     }
   };
-  console.log(roomTypeId, 'roomtypeid');
+  console.log(roomTypes, roomType, 'roomtypeid');
   return (
-    <Container>
-      <ContainerColumn>
-        <Heading>Add RoomRate</Heading>
-      </ContainerColumn>
-      <div className="mt-5 p-5 bg-zinc-50 border rounded-md w-full">
-        <Heading variant="subheading">Details</Heading>
-        <div className="mt-5 grid grid-cols-3 gap-5 w-full">
-
-          <div className="flex items-center gap-2.5">
+    <Container className="h-[85vh] overflow-scroll">
+      <Heading>Create Rate</Heading>
+      <div className="mt-1 p-0 rounded-md w-full">
+        <div className="mt-1 w-full">
+          <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+            <Label htmlFor="username" className="text-right w-[30vw]">
+              Title:
+            </Label>
             <Input
               type="string"
               onWheel={(e) => e.currentTarget.blur()}
               name="title"
-              label="Title"
               labelPlacement="outside"
               placeholder="title"
               color="default"
+              className="w-[70vw]"
               isRequired={true}
               value={title}
               onValueChange={setTitle}
@@ -285,72 +304,93 @@ const AddRates: FC<Props> = () => {
               size="lg"
               variant="bordered"
             />
-            {/* <div className="flex items-center gap-2 mt-5">
-              <button
-                // onClick={() => {
-                //   if (quantity > 1) {
-                //     setQuantity(quantity - 1);
-                //   }
-                // }}
-                className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 font-sora font-semibold text-black duration-150 hover:bg-gray-200 active:scale-90 active:bg-gray-300"
-              >
-                -
-              </button>
-              <p className="font-sora text-xl font-semibold text-gray-900">
-                {maxOccupancy || 0}
-              </p>
-              <button
-                onClick={() => {}}
-                className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 font-sora font-semibold text-black duration-150 hover:bg-gray-200 active:scale-90 active:bg-gray-300"
-              >
-                +
-              </button>
-            </div> */}
           </div>
-          <Input
-            type="number"
-            onWheel={(e) => e.currentTarget.blur()}
-            name="roomPricePerDay"
-            label="Room Price (per day)"
-            labelPlacement="outside"
-            placeholder="₹000"
-            color="default"
-            isRequired={true}
-            value={roomPricePerDay}
-            onValueChange={setRoomPricePerDay}
-            radius="md"
-            size="lg"
-            variant="bordered"
-          />
-          <Select
-            color="default"
-            label="Room Type"
-            labelPlacement="outside"
-            placeholder="Select Room Type"
-            selectedKeys={roomTypeId}
-            onSelectionChange={setRoomTypeId}
-            radius="md"
-            size="lg"
-            variant="bordered"
-          >
-            {roomTypes.map((category: any) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category?.title}
-              </SelectItem>
-            ))}
-          </Select>
+          <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+            <Label htmlFor="username" className="text-right w-[30vw]">
+              Property:
+            </Label>
+            <Select
+              items={roomTypes || []}
+              placeholder="Select a property"
+              labelPlacement="outside"
+              variant="bordered"
+              selectedKeys={roomType}
+              onSelectionChange={setRoomType}
+              classNames={{
+                trigger: "h-12",
+              }}
+              renderValue={(items: any) => {
+                return items.map((item: any) => (
+                  <div key={item.data.key} className="flex items-center gap-2">
+                    <div className="flex flex-col">
+                      <div className="flex items-center justify-start gap-1">
+                        <span>{item.data.title}</span>
+                      </div>
+                    </div>
+                  </div>
+                ));
+              }}
+            >
+              {(p) => (
+                <SelectItem key={p?.id} value={p?.title}>
+                  <div className="flex gap-2 items-center">
+                    <div className="flex flex-col">
+                      <span className="text-small">{p?.title}</span>
+                    </div>
+                  </div>
+                </SelectItem>
+              )}
+            </Select>
+          </div>
+          <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+            <Label htmlFor="username" className="text-right w-[30vw]">
+              Room Type:
+            </Label>
+            <Select
+              items={roomTypes || []}
+              placeholder="Select Room Type"
+              labelPlacement="outside"
+              variant="bordered"
+              selectedKeys={roomType}
+              onSelectionChange={setRoomType}
+              classNames={{
+                trigger: "h-12",
+              }}
+              renderValue={(items: any) => {
+                return items.map((item: any) => (
+                  <div key={item.data.key} className="flex items-center gap-2">
+                    <div className="flex flex-col">
+                      <div className="flex items-center justify-start gap-1">
+                        <span>{item.data.title}</span>
+                      </div>
+                    </div>
+                  </div>
+                ));
+              }}
+            >
+              {(p) => (
+                <SelectItem key={p?.id} value={p?.title}>
+                  <div className="flex gap-2 items-center">
+                    <div className="flex flex-col">
+                      <span className="text-small">{p?.title}</span>
+                    </div>
+                  </div>
+                </SelectItem>
+              )}
+            </Select>
+          </div>
         </div>
         <div className="mt-4">
-          <div className="border-b-[1px]">
+          <div className="border-b-[1px] my-2">
             <legend>Price Settings</legend>
           </div>
-          <div className="flex items-center grid grid-cols-4 gap-2.5 mb-2">
-            <Label htmlFor="username" className="text-right">
+          <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+            <Label htmlFor="username" className="text-right w-[30vw]">
               Currency:
             </Label>
             <Select
+              name="currency"
               color="default"
-              label=""
               labelPlacement="outside"
               placeholder="Select Currency"
               selectedKeys={currency}
@@ -359,53 +399,245 @@ const AddRates: FC<Props> = () => {
               size="lg"
               variant="bordered"
             >
-              {roomTypes.map((category: any) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category?.title}
+              {['INR', 'GBP'].map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
                 </SelectItem>
               ))}
-            </Select></div>
-          <div className="flex items-center grid gap-2.5 grid-cols-4 mb-2">
-            <Label htmlFor="username" className="text-right">
+            </Select>
+          </div>
+          <div className="flex items-center flex-row justify-center gap-2.5 my-3">
+            <Label htmlFor="username" className="text-right w-[30vw]">
               Sell Mode:
             </Label>
-            <Select
-              color="default"
-              label=""
+            <div className="w-[70vw]">
+              <input onChange={() => setSellMode("per_room")} type="radio" checked={sellMode == "per_room"} id="html" name="sellMode" value="perRoom" className="mr-1" />
+              <label htmlFor="html" className="mr-2">Per Room</label>
+              <input onChange={() => setSellMode("per_person")} type="radio" checked={sellMode == "per_person"} id="css" name="sellMode" value="perPerson" className="mr-1" />
+              <label htmlFor="css">Per Person</label><br />
+            </div>
+          </div>
+          {sellMode == "per_room" ? <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+            <Label htmlFor="username" className="text-right w-[30vw]">
+              Rate:
+            </Label>
+            <Input
+              type="string"
+              onWheel={(e) => e.currentTarget.blur()}
+              name="title"
               labelPlacement="outside"
-              placeholder="Select Currency"
-              selectedKeys={currency}
-              onSelectionChange={setCurrency}
+              placeholder="rate"
+              color="default"
+              className="w-[70vw]"
+              isRequired={true}
+              value={rate}
+              onValueChange={setRate}
+              radius="md"
+              size="lg"
+              variant="bordered"
+            />
+          </div> : <>
+            <div className="flex items-center flex-row justify-center gap-2.5 my-3">
+              <Label htmlFor="username" className="text-right w-[30vw]">
+                Rate Mode:
+              </Label>
+              <div className="w-[70vw]">
+                <input onChange={() => setRateMode("manual")} type="radio" checked={rateMode == "manual"} id="html" name="rateMode" value="manual" className="mr-1" />
+                <label htmlFor="html" className="mr-2">Manual</label>
+                <input onChange={() => setRateMode("derived")} type="radio" checked={rateMode == "derived"} id="html" name="rateMode" value="derived" className="mr-1" />
+                <label htmlFor="html" className="mr-2">Derived</label>
+                <input onChange={() => setRateMode("auto")} type="radio" checked={rateMode == "auto"} id="css" name="rateMode" value="auto" className="mr-1" />
+                <label htmlFor="css">Auto</label><br />
+              </div>
+            </div>
+            <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+              <Label htmlFor="username" className="text-right w-[30vw]">
+                Rate for 1 Person:
+              </Label>
+              <Input
+                type="string"
+                onWheel={(e) => e.currentTarget.blur()}
+                name="title"
+                labelPlacement="outside"
+                placeholder="rate"
+                color="default"
+                className="w-[70vw]"
+                isRequired={true}
+                value={rate}
+                onValueChange={setRate}
+                radius="md"
+                size="lg"
+                variant="bordered"
+              />
+            </div>
+            <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+              <Label htmlFor="username" className="text-right w-[30vw]">
+                Rate for 2 Person:
+              </Label>
+              <Input
+                type="string"
+                onWheel={(e) => e.currentTarget.blur()}
+                name="title"
+                labelPlacement="outside"
+                placeholder="rate"
+                color="default"
+                className="w-[70vw]"
+                isRequired={true}
+                value={rate}
+                onValueChange={setRate}
+                radius="md"
+                size="lg"
+                variant="bordered"
+              />
+            </div>
+            <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+              <Label htmlFor="username" className="text-right w-[30vw]">
+                Rate for 3 Person:
+              </Label>
+              <Input
+                type="string"
+                onWheel={(e) => e.currentTarget.blur()}
+                name="title"
+                labelPlacement="outside"
+                placeholder="rate"
+                color="default"
+                className="w-[70vw]"
+                isRequired={true}
+                value={rate}
+                onValueChange={setRate}
+                radius="md"
+                size="lg"
+                variant="bordered"
+              />
+            </div>
+            <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+              <Label htmlFor="username" className="text-right w-[30vw]">
+                Children Fee:
+              </Label>
+              <Input
+                type="string"
+                onWheel={(e) => e.currentTarget.blur()}
+                name="title"
+                labelPlacement="outside"
+                placeholder="rate"
+                color="default"
+                className="w-[70vw]"
+                isRequired={true}
+                value={childrenFee}
+                onValueChange={setChildrenFee}
+                radius="md"
+                size="lg"
+                variant="bordered"
+              />
+            </div>
+            <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+              <Label htmlFor="username" className="text-right w-[30vw]">
+                Infant Fee:
+              </Label>
+              <Input
+                type="string"
+                onWheel={(e) => e.currentTarget.blur()}
+                name="title"
+                labelPlacement="outside"
+                placeholder="rate"
+                color="default"
+                className="w-[70vw]"
+                isRequired={true}
+                value={infantFee}
+                onValueChange={setInfantFee}
+                radius="md"
+                size="lg"
+                variant="bordered"
+              />
+            </div>
+          </>}
+        </div>
+        <div className="mt-4">
+          <div className="border-b-[1px] my-2">
+            <legend>Additional Information</legend>
+          </div>
+          <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+            <Label htmlFor="username" className="text-right w-[30vw]">
+              Meal Type:
+            </Label>
+            <Select
+              name="currency"
+              color="default"
+              labelPlacement="outside"
+              placeholder="Select Meals"
+              selectedKeys={meals}
+              onSelectionChange={setMeals}
               radius="md"
               size="lg"
               variant="bordered"
             >
-              {roomTypes.map((category: any) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category?.title}
+              {['INR', 'GBP'].map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
                 </SelectItem>
               ))}
-            </Select></div>
-          <div className="flex items-center grid grid-cols-4 gap-2.5">
-          <Label htmlFor="username" className="text-right">
-              Rate:
-            </Label><Select
-            color="default"
-            label=""
-            labelPlacement="outside"
-            placeholder="Select Currency"
-            selectedKeys={currency}
-            onSelectionChange={setCurrency}
-            radius="md"
-            size="lg"
-            variant="bordered"
-          >
-            {roomTypes.map((category: any) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category?.title}
-              </SelectItem>
-            ))}
-          </Select></div>
+            </Select>
+          </div>
+          <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+            <Label htmlFor="username" className="text-right w-[30vw]">
+              Cancellation Policy:
+            </Label>
+            <Input
+              type="string"
+              onWheel={(e) => e.currentTarget.blur()}
+              name="title"
+              labelPlacement="outside"
+              placeholder="rate"
+              color="default"
+              className="w-[65vw]"
+              isRequired={true}
+              value={rate}
+              onValueChange={setRate}
+              radius="md"
+              size="lg"
+              variant="bordered"
+            />
+            +
+          </div>
+          <div className="flex items-center flex-row justify-center gap-2.5 mb-2">
+            <Label htmlFor="username" className="text-right w-[30vw]">
+              Tax set:
+            </Label>
+            <Input
+              type="string"
+              onWheel={(e) => e.currentTarget.blur()}
+              name="title"
+              labelPlacement="outside"
+              placeholder="rate"
+              color="default"
+              className="w-[65vw]"
+              isRequired={true}
+              value={rate}
+              onValueChange={setRate}
+              radius="md"
+              size="lg"
+              variant="bordered"
+            />
+            +</div>
+          <div className="flex items-center flex-row justify-center gap-2.5">
+            <Label htmlFor="username" className="text-right w-[30vw]">
+              Last editing UI:
+            </Label>
+            <Input
+              type="string"
+              onWheel={(e) => e.currentTarget.blur()}
+              name="title"
+              labelPlacement="outside"
+              placeholder="rate"
+              color="default"
+              className="w-[70vw]"
+              isRequired={true}
+              value={rate}
+              onValueChange={setRate}
+              radius="md"
+              size="lg"
+              variant="bordered"
+            /></div>
         </div>
         <div className="w-full flex justify-end items-center gap-2.5 mt-5">
           <Button variant="ghost" className=" active:scale-95">
@@ -416,7 +648,7 @@ const AddRates: FC<Props> = () => {
             // isLoading={submitting}
             className="bg-purple-700 text-white active:scale-95"
           >
-            Add Room Rate
+            Create Rate
           </Button>
         </div>
       </div>

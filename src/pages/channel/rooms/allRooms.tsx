@@ -16,8 +16,8 @@ import {
 import { useGlobalContext } from "@/lib/utils";
 import { Badge, Card, CardBody, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Input, Select, SelectItem, Spinner, Tab, Tabs } from "@nextui-org/react";
 import axios from "axios";
-import { ChevronDown, Loader2 } from "lucide-react";
-import React, { FC, useEffect, useState } from "react";
+import { ChevronDown, Loader2, MoreHorizontal, SidebarCloseIcon } from "lucide-react";
+import React, { FC, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label"
@@ -32,6 +32,7 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet"
 import AddRates from "./addRates";
+import { DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 type Props = {
     children?: React.ReactNode;
 };
@@ -43,6 +44,7 @@ const AllChannelRooms: FC<Props> = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [rooms, setRooms] = useState<RoomProps[]>([]);
     const [filteredRooms, setFilteredRooms] = useState<RoomProps[]>();
+    const abcd = useRef<HTMLButtonElement | null>(null)
     const navigate = useNavigate();
 
     const fetchRoomsByProperty = async (propertyId: string) => {
@@ -87,6 +89,10 @@ const AllChannelRooms: FC<Props> = () => {
             </div>
         );
     }
+    const handleSubmit = () => {
+
+    }
+
     return (
         <Container>
             <ContainerColumn>
@@ -157,26 +163,28 @@ const AllChannelRooms: FC<Props> = () => {
                                                     yellow bells
                                                 </TableCell>
                                                 <TableCell className="text-right">
-
-                                                    <Dropdown placement="bottom-end">
-                                                        <DropdownTrigger>
-                                                            <Button
-                                                                variant={"ghost"}
-                                                                className="relative text-purple-700"
-                                                            >
-
-                                                                Actions
-                                                                <ChevronDown
-                                                                    size={18}
-                                                                />
-                                                            </Button>
-                                                        </DropdownTrigger>
-                                                        <DropdownMenu aria-label="Profile Actions" variant="flat">
-                                                            <DropdownItem onClick={() => openDrawer()} key="profile"> create rate</DropdownItem>
-                                                            <DropdownItem onClick={() => navigate("/channel/editRoom/" + roomType?.id?.toString() || "")} key="settings">Edit</DropdownItem>
-                                                            <DropdownItem key="settings">remove</DropdownItem>
-                                                        </DropdownMenu>
-                                                    </Dropdown>
+                                                    <Sheet>
+                                                        <SheetTrigger>Create Rate</SheetTrigger>
+                                                        <SheetContent className="max-w-[80vw] w-[800px] min-w-[800px]">
+                                                            <AddRates />
+                                                            <SheetFooter>
+                                                                <SheetClose asChild>
+                                                                    <div className="w-full flex justify-end items-center gap-2.5 mt-5">
+                                                                        <Button variant="ghost" className=" active:scale-95">
+                                                                            Cancel
+                                                                        </Button>
+                                                                        <Button
+                                                                            onClick={handleSubmit}
+                                                                            // isLoading={submitting}
+                                                                            className="bg-purple-700 text-white active:scale-95"
+                                                                        >
+                                                                            Create Rate
+                                                                        </Button>
+                                                                    </div>
+                                                                </SheetClose>
+                                                            </SheetFooter>
+                                                        </SheetContent>
+                                                    </Sheet>
                                                 </TableCell>
                                             </TableRow>
                                         );
@@ -185,25 +193,8 @@ const AllChannelRooms: FC<Props> = () => {
                         </Table>
                     </CardBody>
                 </Card>
-            </ContainerColumn>
-            <Sheet>     
-                <SheetTrigger>Open</SheetTrigger>
-                <SheetContent>
-                    <SheetHeader>
-                        <SheetTitle>Edit profile</SheetTitle>
-                        <SheetDescription>
-                            Make changes to your profile here. Click save when you're done.
-                        </SheetDescription>
-                    </SheetHeader>
-                   
-                    <SheetFooter>
-                        <SheetClose asChild>
-                            <Button type="submit">Save changes</Button>
-                        </SheetClose>
-                    </SheetFooter>
-                </SheetContent>
-            </Sheet>
-        </Container>
+            </ContainerColumn >
+        </Container >
     );
 };
 

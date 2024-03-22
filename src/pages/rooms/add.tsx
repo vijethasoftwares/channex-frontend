@@ -270,7 +270,7 @@ const AddRoom: FC<Props> = () => {
       setMaxOccupancy("3");
     }
   }, [roomType]);
-
+  console.log(property, 'property changed')
   return (
     <Container>
       <ContainerColumn>
@@ -453,7 +453,7 @@ const AddRoom: FC<Props> = () => {
             onValueChange={setRoomPricePerMonth}
             isDisabled={
               selectedProperty?.type?.toLowerCase().includes("pg") ||
-              selectedProperty?.type?.toLowerCase().includes("apartment")
+                selectedProperty?.type?.toLowerCase().includes("apartment")
                 ? false
                 : true
             }
